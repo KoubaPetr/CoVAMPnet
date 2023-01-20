@@ -12,29 +12,32 @@ from src.model import KoopmanModel
 from src.data_fcts import DataGenerator
 from src.vanilla_gradients import VanillaGradients
 import tensorflow as tf
+from config.paths import INFO_PATH_TEMPLATE, MODEL_PATH_TEMPLATE, MODEL_HISTORY_PATH_TEMPLATE, PRECOMPUTED_TRAJECTORIES_PATH_TEMPLATE, DATASPLITS_PATH_TEMPLATE
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--num_frames", type=int, default=5, help="number of frames to evaluate the gradients on")
 parser.add_argument('--job_no', type=int, default=0, help='attempt number')
-args = parser.parse_args()
-
+parser.add_argument('--systems', nargs='+',
+                    help='List (separated by spaces) the names of the systems for which you wish to preprocess the data.',
+                    required=True)
 
 class DataParameters:
     """
     Class reading and holding data and parameters for our analysis
     """
 
-    def __init__(self, dataset_name, max_frames=650000, ratio=0.9, dt=0.1, network_lag=50, trainings_per_split=3, num_attempts=6):
+    def __init__(self, dataset_name, max_frames=650000, ratio=0.9, dt=0.1, network_lag=50, trainings_per_split=3, num_attempts=6, num_markov_states=3):
         self.max_frames = max_frames
+        self.num_markov_states = num_markov_states
         self.dataset_name = dataset_name
         self.ratio = ratio
         self.dt = dt
         self.network_lag = network_lag
-        self.info_path = 'data/trajectories/{}/info.yml'.format(self.dataset_name)
-        self.model_path = join("data/models/{}".format(self.dataset_name), 'model-ve-{}'.format(self.dataset_name) + '-{}-{}-intermediate-2.hdf5')
-        self.history_path = join("data/model_scores/{}".format(self.dataset_name), 'model-histories-{}'.format(self.dataset_name) + '-{}-{}.p')
-        self.preprocessed_trajs_path = "data/precomputed_trajectories/mindist-780-{}.npy".format(self.dataset_name)
-        self.training_splits_path = 'data/training_splits/{}'.format(self.dataset_name)
+        self.info_path = INFO_PATH_TEMPLATE.format(self.dataset_name)
+        self.model_path = join(MODEL_PATH_TEMPLATE.format(d=self.dataset_name, total_states=self.num_markov_states))
+        self.history_path = join(MODEL_HISTORY_PATH_TEMPLATE.format(d=self.dataset_name, total_states=self.num_markov_states))
+        self.preprocessed_trajs_path = PRECOMPUTED_TRAJECTORIES_PATH_TEMPLATE.format(d=self.dataset_name)
+        self.training_splits_path = DATASPLITS_PATH_TEMPLATE.format(d=self.dataset_name)
 
         self.trainings_per_split = trainings_per_split
         self.num_selected_models = num_attempts//self.trainings_per_split
@@ -84,22 +87,46 @@ class DataParameters:
         vamp2_losses = np.array(vamp2_losses)
         return vamp2_losses
 
-    def get_generator(self, attempt, multi_attempt_training=True):
+    def get_generator(self, attempt, multi_attempt_training=True) -> DataGenerator:
+        """
+        Loading the data generator given a particular data split
+
+        Parameters
+        ----------
+        attempt, int - index of the datasplit for whit the generator should be constructed
+        multi_attempt_training, bool - default = True, refers to the training scheme of more training performed with a single datasplit
+
+        Returns the DataGenerator object
+        -------
+
+        """
         if multi_attempt_training:
             # THIS SHOULD ASSURE THAT THERE ARE THREE CONSECUTIVE ATTEMPTS ALL TRAINED ON SAME DATA SPLITS
             attempt = int(attempt / 3)
         else:
             raise ValueError('We should be working with the final version, relying on the multi-attempt training.')
 
-        generator_path = join(self.training_splits_path, "model-idx-{0}-{1}.hdf5".format(self.dataset_name, attempt))
+        generator_path = self.training_splits_path.format(model_idx=attempt)
         generator = DataGenerator(self.input_data, ratio=self.ratio, dt=self.dt, max_frames=self.max_frames)
         generator.load(generator_path)
         return generator
 
 
-    def load_koop(self, generator, attempt, n=3):
-        koop = KoopmanModel(n=n, network_lag=self.network_lag, verbose=1)
-        model_path = self.model_path.format(n, attempt)
+    def load_koop(self, generator, attempt) -> KoopmanModel:
+        """
+        Loads a particular instance of a KoopmanModel containing the Artificial Neural Network we wish to analyze
+
+        Parameters
+        ----------
+        generator, DataGenerator - used for the training of the given instance
+        attempt, int - idx of the model instance to be loaded
+
+        Returns, KoopmanModel
+        -------
+
+        """
+        koop = KoopmanModel(n=self.num_markov_states, network_lag=self.network_lag, verbose=1)
+        model_path = self.model_path.format(total_states=self.num_markov_states, model_idx=attempt)
         koop.load(model_path)
         koop.generator = generator
         return koop
@@ -116,26 +143,24 @@ def main(systems: list[str] = ['ZS-ab2', 'ZS-ab3', 'ZS-ab4']):
     for system in systems:
         single_models = []
         for selected_attempt in data_pars[system].selected_models:
-            if 'koop' in globals():
-                del koop
-            if 'single_chi_model' in globals():
-                del single_chi_model
-            if 'generator' in globals():
-                del generator
-            print(selected_attempt)
-            attempt_20 = selected_attempt//20
-            generator = data_pars[system].get_generator(attempt=attempt_20, multi_attempt_training=True)
-            koop = data_pars[system].load_koop(generator=generator, attempt=selected_attempt, n=3)
+            for old_object in ['koop', 'single_chi_model', 'generator']:
+                if old_object in globals(): del old_object
+            datasplit_id = selected_attempt//data_pars[system].num_selected_models #convert the overall train attempt into id of the data split
+            generator = data_pars[system].get_generator(attempt=datasplit_id, multi_attempt_training=True)
+            koop = data_pars[system].load_koop(generator=generator, attempt=selected_attempt)
             single_chi_model = tf.keras.models.Model(inputs=koop._models['chi']._model.input[0],
                                                      outputs=koop._models['chi']._model.layers[-2].output) #TODO: does it reinit the model correctly every time?
-            single_chi_model.load_weights(filepath=data_pars[system].model_path.format(3, selected_attempt), by_name=True)
-            #koop._models["single_chi"] = single_chi_model
+            single_chi_model.load_weights(filepath=data_pars[system].model_path.format(model_idx=selected_attempt), by_name=True)
+
             if tf.executing_eagerly():
                 single_chi_model.compile(run_eagerly=True)
             else:
                 raise ValueError("Eager execution is turned off! This wont allow us to evaluate the gradient values by Tensor conversion to numpy arrays.")
             single_models.append(single_chi_model)
             models_for_systems[system] = single_models
+
+
+    ### TODO: Continue refactoring from here below
 
     FRAMES_PER_SYSTEM = args.num_frames
     job_no = args.job_no
@@ -184,4 +209,5 @@ def main(systems: list[str] = ['ZS-ab2', 'ZS-ab3', 'ZS-ab4']):
             raise ValueError('Only one of the files (grads or classifications) is missing')
 
 if __name__ == '__main__':
-    main()
+    args = parser.parse_args()
+    main(args.systems)
