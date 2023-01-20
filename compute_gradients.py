@@ -2,8 +2,6 @@ from src.utils import unflatten
 from os.path import join
 import numpy as np
 import yaml
-from warnings import warn
-import h5py
 import pickle
 import random
 import os
@@ -76,8 +74,9 @@ class DataParameters:
         for out_attempt in range(self.num_selected_models):
             subattempt_losses = np.zeros(self.trainings_per_split)
             for subattempt in range(self.trainings_per_split):
-                pickle_object = pickle.load(
-                    open(self.history_path.format(3, self.trainings_per_split * out_attempt + subattempt), 'rb'))
+                model_idx = self.trainings_per_split * out_attempt + subattempt
+                with open(self.history_path.format(3, model_idx), 'rb') as history_file:
+                    pickle_object = pickle.load(history_file)
                 losses = pickle_object['both'][0]['val_loss']
                 min_loss = min(losses)
                 subattempt_losses[subattempt] = min_loss
@@ -85,45 +84,36 @@ class DataParameters:
         vamp2_losses = np.array(vamp2_losses)
         return vamp2_losses
 
-    def __repr__(self):
-        return "DataParameters object for system {}".format(self.dataset_name)
-
-
-def main():
-
-    SYSTEMS = ['ZS-ab2', 'ZS-ab3', 'ZS-ab4']
-
-    data_pars = {system: DataParameters(dataset_name=system) for system in SYSTEMS}
-
-    def get_generator(attempt, data_pars, multi_attempt_training=True):
+    def get_generator(self, attempt, multi_attempt_training=True):
         if multi_attempt_training:
             # THIS SHOULD ASSURE THAT THERE ARE THREE CONSECUTIVE ATTEMPTS ALL TRAINED ON SAME DATA SPLITS
             attempt = int(attempt / 3)
         else:
             raise ValueError('We should be working with the final version, relying on the multi-attempt training.')
 
-        generator_path = join(data_pars.training_splits_path, "model-idx-{0}-{1}.hdf5".format(data_pars.dataset_name, attempt))
-        generator = DataGenerator(data_pars.input_data, ratio=data_pars.ratio, dt=data_pars.dt,
-                                  max_frames=data_pars.max_frames)
+        generator_path = join(self.training_splits_path, "model-idx-{0}-{1}.hdf5".format(self.dataset_name, attempt))
+        generator = DataGenerator(self.input_data, ratio=self.ratio, dt=self.dt, max_frames=self.max_frames)
         generator.load(generator_path)
         return generator
 
 
-    def load_koop(generator, attempt, sys_parameters, n=3):
-        koop = KoopmanModel(n=n, network_lag=sys_parameters.network_lag, verbose=1)
-        model_path = sys_parameters.model_path.format(n, attempt)
+    def load_koop(self, generator, attempt, n=3):
+        koop = KoopmanModel(n=n, network_lag=self.network_lag, verbose=1)
+        model_path = self.model_path.format(n, attempt)
         koop.load(model_path)
         koop.generator = generator
         return koop
-    #
-    # import tensorflow as tf
-    # print("TensorFlow version:", tf.__version__)
-    # #tf.enable_eager_execution()
-    # tf.compat.v1.enable_eager_execution()
-    # tf.executing_eagerly()
+
+    def __repr__(self):
+        return "DataParameters object for system {}".format(self.dataset_name)
+
+
+def main(systems: list[str] = ['ZS-ab2', 'ZS-ab3', 'ZS-ab4']):
+
+    data_pars = {system: DataParameters(dataset_name=system) for system in systems}
 
     models_for_systems = {}
-    for system in SYSTEMS:
+    for system in systems:
         single_models = []
         for selected_attempt in data_pars[system].selected_models:
             if 'koop' in globals():
@@ -134,8 +124,8 @@ def main():
                 del generator
             print(selected_attempt)
             attempt_20 = selected_attempt//20
-            generator = get_generator(attempt=attempt_20, data_pars=data_pars[system], multi_attempt_training=True)
-            koop = load_koop(generator=generator, attempt=selected_attempt, sys_parameters=data_pars[system], n=3)
+            generator = data_pars[system].get_generator(attempt=attempt_20, multi_attempt_training=True)
+            koop = data_pars[system].load_koop(generator=generator, attempt=selected_attempt, n=3)
             single_chi_model = tf.keras.models.Model(inputs=koop._models['chi']._model.input[0],
                                                      outputs=koop._models['chi']._model.layers[-2].output) #TODO: does it reinit the model correctly every time?
             single_chi_model.load_weights(filepath=data_pars[system].model_path.format(3, selected_attempt), by_name=True)
@@ -156,7 +146,7 @@ def main():
         print('Reading frames')
     else:
         with open('{}_frames_for_gradient_evaluation_job_{}.yml'.format(FRAMES_PER_SYSTEM,job_no), 'w') as outfile:
-            FRAME_IDs = {system: random.sample(range(0, data_pars[system].num_frames), FRAMES_PER_SYSTEM) for system in SYSTEMS} # Pick frames on which to evaluate for each system
+            FRAME_IDs = {system: random.sample(range(0, data_pars[system].num_frames), FRAMES_PER_SYSTEM) for system in systems} # Pick frames on which to evaluate for each system
             yaml.dump(FRAME_IDs, outfile, default_flow_style=False)
 
 
@@ -166,7 +156,7 @@ def main():
     classifications = {}
 
     start = time.time()
-    for system in SYSTEMS: #TODO redesign the loop
+    for system in systems: #TODO redesign the loop
         print('Iterating systems')
         params = data_pars[system]
         if os.path.exists('{}_grads_{}_job_{}.npy'.format(system,FRAMES_PER_SYSTEM,job_no)) and os.path.exists('{}_classification_{}_job_{}.npy'.format(system,FRAMES_PER_SYSTEM,job_no)):
