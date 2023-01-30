@@ -13,7 +13,7 @@
           <option name="fileUrl" value="file://$PROJECT_DIR$/src/model.py" />
         </OpenedFileInfo>
         <OpenedFileInfo>
-          <option name="caretOffset" value="710" />
+          <option name="caretOffset" value="773" />
           <option name="fileUrl" value="file://$PROJECT_DIR$/config/paths.py" />
         </OpenedFileInfo>
         <OpenedFileInfo>
@@ -25,7 +25,7 @@
           <option name="fileUrl" value="file://$PROJECT_DIR$/gradient_job.sh" />
         </OpenedFileInfo>
         <OpenedFileInfo>
-          <option name="caretOffset" value="11487" />
+          <option name="caretOffset" value="11576" />
           <option name="fileUrl" value="file://$PROJECT_DIR$/compute_gradients.py" />
         </OpenedFileInfo>
       </list>
