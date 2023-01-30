@@ -6,3 +6,4 @@ MODEL_PATH_TEMPLATE = "data/models/{d}/model-ve-{d}-{total_states}-{{model_idx}}
 MODEL_HISTORY_PATH_TEMPLATE = "data/model_scores/{d}/model-histories-{d}-{total_states}-{{model_idx}}.p"
 PRECOMPUTED_TRAJECTORIES_PATH_TEMPLATE = "data/precomputed_trajectories/mindist-780-{d}.npy"
 DATASPLITS_PATH_TEMPLATE = 'data/training_splits/{d}/model-idx-{d}-{{model_idx}}.hdf5'
+FRAMES_PER_JOBS_PATH = 'results/frames_for_gradient_jobs'

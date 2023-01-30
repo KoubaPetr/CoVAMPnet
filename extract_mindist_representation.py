@@ -1,7 +1,7 @@
 import numpy as np
 import pyemma as pe
 from src.utils import update_yaml
-from config.paths import TRAJECTORY_PATHS_TEMPLATE, TOPOLOGY_PATH_TEMPLATE, MINDIST_OUTPUT_PATH_TEMPLATE, INFO_OUTPUT_PATH_TEMPLATE
+from config.paths import TRAJECTORY_PATHS_TEMPLATE, TOPOLOGY_PATH_TEMPLATE, MINDIST_PATH_TEMPLATE, INFO_PATH_TEMPLATE
 from glob import glob
 from argparse import ArgumentParser
 
@@ -23,8 +23,8 @@ def preprocess_trajectories(dataset_name: str = None, nres: int = None) -> None:
     ### Prepare the path data for the particular dataset
     trajectory_paths = TRAJECTORY_PATHS_TEMPLATE.format(dataset_name)
     topology_path = TOPOLOGY_PATH_TEMPLATE.format(dataset_name)
-    mindist_output_path = MINDIST_OUTPUT_PATH_TEMPLATE.format(dataset_name)
-    info_output_path = INFO_OUTPUT_PATH_TEMPLATE.format(dataset_name)
+    mindist_output_path = MINDIST_PATH_TEMPLATE.format(dataset_name)
+    info_output_path = INFO_PATH_TEMPLATE.format(dataset_name)
 
     ### Read the trajectories and prepare the interresidue distance matrices
     trajs = sorted(glob(trajectory_paths))

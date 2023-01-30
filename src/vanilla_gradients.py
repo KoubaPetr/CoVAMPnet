@@ -1,3 +1,11 @@
+"""
+
+Code from this file was mainly taken from tf_explain package,
+see https://tf-explain.readthedocs.io/en/latest/methods.html#vanilla-gradients
+
+"""
+
+
 import tensorflow as tf
 from warnings import warn
 print("TensorFlow version:", tf.__version__)
