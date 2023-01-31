@@ -1,15 +1,29 @@
 import matplotlib.pyplot as plt
-from src.utils import QUtils, QUtilsSorted, unflatten, triu_inverse
-from tqdm import trange
-from os.path import join
 import numpy as np
 import yaml
 from collections import defaultdict
+from src.utils import triu_inverse
 
 
 SYSTEMS = ['ZS-ab2','ZS-ab3','ZS-ab4']
 FRAMES_PER_SPLIT = 5
 SPLITS = 2000
+
+def read_file(system: str, split: int, data: str):
+    """
+    TODO
+    Parameters
+    ----------
+    system
+    split
+    data
+
+    Returns
+    -------
+
+    """
+    assert data in ['grads','classifications'], 'Value of data expected to be grads or classifications'
+    file_path_template =
 
 grads = defaultdict(list)
 classifications = defaultdict(list)

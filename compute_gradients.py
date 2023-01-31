@@ -29,7 +29,7 @@ from src.model import KoopmanModel
 from src.data_fcts import DataGenerator
 from src.vanilla_gradients import VanillaGradients
 import tensorflow as tf
-from config.paths import INFO_PATH_TEMPLATE, MODEL_PATH_TEMPLATE, MODEL_HISTORY_PATH_TEMPLATE, PRECOMPUTED_TRAJECTORIES_PATH_TEMPLATE, DATASPLITS_PATH_TEMPLATE, FRAMES_PER_JOBS_PATH, CLASSIFICATION_PER_JOBS_PATH, GRADIENTS_PER_JOBS_PATH
+from config.paths import INFO_PATH_TEMPLATE, MODEL_PATH_TEMPLATE, MODEL_HISTORY_PATH_TEMPLATE, PRECOMPUTED_TRAJECTORIES_PATH_TEMPLATE, DATASPLITS_PATH_TEMPLATE, FRAMES_PER_JOBS_PATH_TEMPLATE, CLASSIFICATION_PER_JOBS_PATH_TEMPLATE, GRADIENTS_PER_JOBS_PATH_TEMPLATE
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--num_frames", type=int, default=5, help="number of frames to evaluate the gradients on")
@@ -176,12 +176,12 @@ def main(systems: list[str] = ['ZS-ab2', 'ZS-ab3', 'ZS-ab4']):
             single_models.append(single_chi_model)
             models_for_systems[system] = single_models
 
-    if os.path.exists('{}/{}_frames_for_gradient_evaluation_job_{}.yml'.format(FRAMES_PER_JOBS_PATH,args.num_frames, args.job_no)):
-        with open('{}/{}_frames_for_gradient_evaluation_job_{}.yml'.format(FRAMES_PER_JOBS_PATH,args.num_frames, args.job_no), 'r') as yamlfile:
+    if os.path.exists(FRAMES_PER_JOBS_PATH_TEMPLATE.format(args.num_frames, args.job_no)):
+        with open(FRAMES_PER_JOBS_PATH_TEMPLATE.format(args.num_frames, args.job_no), 'r') as yamlfile:
             FRAME_IDs = yaml.safe_load(yamlfile)
         print('Reading frames')
     else:
-        with open('{}/{}_frames_for_gradient_evaluation_job_{}.yml'.format(FRAMES_PER_JOBS_PATH,args.num_frames,args.job_no), 'w') as outfile:
+        with open(FRAMES_PER_JOBS_PATH_TEMPLATE.format(args.num_frames,args.job_no), 'w') as outfile:
             FRAME_IDs = {system: random.sample(range(0, data_pars[system].num_frames), args.num_frames) for system in systems} # Pick frames on which to evaluate for each system
             yaml.dump(FRAME_IDs, outfile, default_flow_style=False)
 
@@ -195,10 +195,10 @@ def main(systems: list[str] = ['ZS-ab2', 'ZS-ab3', 'ZS-ab4']):
     for system in systems: #TODO redesign the loop
         print('Iterating systems')
         params = data_pars[system]
-        if os.path.exists('{}/{}_grads_{}_job_{}.npy'.format(GRADIENTS_PER_JOBS_PATH,system,args.num_frames,args.job_no)) and os.path.exists('{}_classification_{}_job_{}.npy'.format(system,args.num_frames,args.job_no)):
-            grads[system] = np.load('{}/{}_grads_{}_job_{}.npy'.format(GRADIENTS_PER_JOBS_PATH,system,args.num_frames,args.job_no))
-            classifications[system] = np.load('{}/{}_classification_{}_job_{}.npy'.format(CLASSIFICATION_PER_JOBS_PATH, system,args.num_frames,args.job_no))
-        elif (not os.path.exists('{}/{}_grads_{}_job_{}.npy'.format(GRADIENTS_PER_JOBS_PATH,system,args.num_frames,args.job_no))) and (not os.path.exists('{}_classification_{}_job_{}.npy'.format(system,args.num_frames,args.job_no))):
+        if os.path.exists(GRADIENTS_PER_JOBS_PATH_TEMPLATE.format(system,args.num_frames,args.job_no)) and os.path.exists('{}_classification_{}_job_{}.npy'.format(system,args.num_frames,args.job_no)):
+            grads[system] = np.load(GRADIENTS_PER_JOBS_PATH_TEMPLATE.format(system,args.num_frames,args.job_no))
+            classifications[system] = np.load(CLASSIFICATION_PER_JOBS_PATH_TEMPLATE.format(system,args.num_frames,args.job_no))
+        elif (not os.path.exists(GRADIENTS_PER_JOBS_PATH_TEMPLATE.format(system,args.num_frames,args.job_no))) and (not os.path.exists('{}_classification_{}_job_{}.npy'.format(system,args.num_frames,args.job_no))):
             grads_per_system = [[[0]*args.num_frames for _ in range(3)] for _ in range(params.num_selected_models)] # np.zeros((20,3,FRAMES_PER_SYSTEM,1,780))
             class_scores_per_system = np.zeros((params.num_selected_models,3,args.num_frames))
 
@@ -214,8 +214,8 @@ def main(systems: list[str] = ['ZS-ab2', 'ZS-ab3', 'ZS-ab4']):
             grads[system] = np.array(grads_per_system)
             classifications[system] = class_scores_per_system
 
-            np.save('{}/{}_grads_{}_job_{}.npy'.format(GRADIENTS_PER_JOBS_PATH,system, args.num_frames,args.job_no),grads[system])
-            np.save('{}/{}_classification_{}_job_{}.npy'.format(CLASSIFICATION_PER_JOBS_PATH,system,args.num_frames,args.job_no),classifications[system])
+            np.save(GRADIENTS_PER_JOBS_PATH_TEMPLATE.format(system, args.num_frames,args.job_no),grads[system])
+            np.save(CLASSIFICATION_PER_JOBS_PATH_TEMPLATE.format(system,args.num_frames,args.job_no),classifications[system])
         else:
             raise ValueError('Only one of the files (grads or classifications) is missing. Either both or none of them should be precomputed - to ensure consistency.')
 
