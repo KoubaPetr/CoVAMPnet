@@ -95,7 +95,7 @@ class DataParameters:
             subattempt_losses = np.zeros(self.trainings_per_split)
             for subattempt in range(self.trainings_per_split):
                 model_idx = self.trainings_per_split * out_attempt + subattempt
-                with open(self.history_path.format(3, model_idx), 'rb') as history_file:
+                with open(self.history_path.format(model_idx=model_idx), 'rb') as history_file:
                     pickle_object = pickle.load(history_file)
                 losses = pickle_object['both'][0]['val_loss']
                 min_loss = min(losses)

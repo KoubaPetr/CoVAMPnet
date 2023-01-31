@@ -9,24 +9,24 @@
           <option name="fileUrl" value="file://$PROJECT_DIR$/src/utils.py" />
         </OpenedFileInfo>
         <OpenedFileInfo>
-          <option name="caretOffset" value="46546" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/src/model.py" />
-        </OpenedFileInfo>
-        <OpenedFileInfo>
           <option name="caretOffset" value="773" />
           <option name="fileUrl" value="file://$PROJECT_DIR$/config/paths.py" />
-        </OpenedFileInfo>
-        <OpenedFileInfo>
-          <option name="caretOffset" value="38" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/extract_mindist_representation.py" />
         </OpenedFileInfo>
         <OpenedFileInfo>
           <option name="caretOffset" value="0" />
           <option name="fileUrl" value="file://$PROJECT_DIR$/gradient_job.sh" />
         </OpenedFileInfo>
         <OpenedFileInfo>
-          <option name="caretOffset" value="11576" />
+          <option name="caretOffset" value="5036" />
           <option name="fileUrl" value="file://$PROJECT_DIR$/compute_gradients.py" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="546" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/README.md" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="196" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/visualize_gradients.py" />
         </OpenedFileInfo>
       </list>
     </option>
