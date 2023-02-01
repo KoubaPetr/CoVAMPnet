@@ -17,7 +17,7 @@
           <option name="fileUrl" value="file://$PROJECT_DIR$/gradient_job.sh" />
         </OpenedFileInfo>
         <OpenedFileInfo>
-          <option name="caretOffset" value="546" />
+          <option name="caretOffset" value="642" />
           <option name="fileUrl" value="file://$PROJECT_DIR$/README.md" />
         </OpenedFileInfo>
         <OpenedFileInfo>
@@ -33,8 +33,12 @@
           <option name="fileUrl" value="file://$PROJECT_DIR$/compute_gradients.py" />
         </OpenedFileInfo>
         <OpenedFileInfo>
-          <option name="caretOffset" value="4082" />
+          <option name="caretOffset" value="3939" />
           <option name="fileUrl" value="file://$PROJECT_DIR$/visualize_gradients.py" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="0" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/align_models.py" />
         </OpenedFileInfo>
       </list>
     </option>
