@@ -10,3 +10,9 @@ DATASPLITS_PATH_TEMPLATE = 'data/training_splits/{d}/model-idx-{d}-{{model_idx}}
 FRAMES_PER_JOBS_PATH_TEMPLATE = 'results/frames_for_gradient_jobs/{}_grads_{}_job_{}.npy'
 GRADIENTS_PER_JOBS_PATH_TEMPLATE = 'results/gradients/{}_grads_{}_job_{}.npy'
 CLASSIFICATION_PER_JOBS_PATH_TEMPLATE = 'results/classification/{}_classification_{}_job_{}.npy'
+
+LOCAL_SORTERS_PATH = 'results/sorters/local_sorters.yml'
+SYSTEM_SORTERS_PATH = 'results/sorters/system_sorters.yml'
+
+FEATURE_IMPORTANCE_PATH_TEMPLATE = 'results/feature_importance/{}_feature_importance.png'
+FEATURE_IMPORTANCE_FULL_MATRIX_PATH_TEMPLATE = 'results/feature_importance/{}_feature_importance_full_matrix.png'

@@ -9,7 +9,7 @@
           <option name="fileUrl" value="file://$PROJECT_DIR$/src/utils.py" />
         </OpenedFileInfo>
         <OpenedFileInfo>
-          <option name="caretOffset" value="743" />
+          <option name="caretOffset" value="1159" />
           <option name="fileUrl" value="file://$PROJECT_DIR$/config/paths.py" />
         </OpenedFileInfo>
         <OpenedFileInfo>
@@ -21,12 +21,8 @@
           <option name="fileUrl" value="file://$PROJECT_DIR$/README.md" />
         </OpenedFileInfo>
         <OpenedFileInfo>
-          <option name="caretOffset" value="502" />
+          <option name="caretOffset" value="4194" />
           <option name="fileUrl" value="file://$PROJECT_DIR$/visualize_gradients.py" />
-        </OpenedFileInfo>
-        <OpenedFileInfo>
-          <option name="caretOffset" value="5063" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/compute_gradients.py" />
         </OpenedFileInfo>
       </list>
     </option>
