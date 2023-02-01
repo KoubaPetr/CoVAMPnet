@@ -21,7 +21,19 @@
           <option name="fileUrl" value="file://$PROJECT_DIR$/README.md" />
         </OpenedFileInfo>
         <OpenedFileInfo>
-          <option name="caretOffset" value="4194" />
+          <option name="caretOffset" value="95" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/config/feature_importance_visualisation_settings.py" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="208" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/config/data_model_params.py" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="5063" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/compute_gradients.py" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="4082" />
           <option name="fileUrl" value="file://$PROJECT_DIR$/visualize_gradients.py" />
         </OpenedFileInfo>
       </list>
