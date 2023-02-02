@@ -50,7 +50,7 @@ def read_sorters(data: str) -> list:
     """
     assert data in ['local','system'], 'Value of data expected to be "local" or "system"'
     sorter_path = LOCAL_SORTERS_PATH if data=='local' else SYSTEM_SORTERS_PATH
-
+    #TODO: adapt the redesign of the sorter path and organization of the dict inside (num_markov_state key, instead system)
     with open(sorter_path, "r") as read:
         sorters = yaml.safe_load(read)
 
