@@ -14,7 +14,7 @@ CLASSIFICATION_PER_JOBS_PATH_TEMPLATE = 'results/classification/{}_classificatio
 CLUSTER_AVG_PATH_TEMPLATE = 'results/classification/{d}_cluster_avg_mindist_{ms}_markov_states.npy'
 
 LOCAL_SORTERS_PATH_TEMPLATE = 'results/sorters/local_sorters_{d}.yml'
-SYSTEM_SORTERS_PATH = 'results/sorters/system_sorters_{d}.yml'
+SYSTEM_SORTERS_PATH_TEMPLATE = 'results/sorters/system_sorters_{d}_wrt_{ref_data}.yml'
 
 FEATURE_IMPORTANCE_PATH_TEMPLATE = 'results/feature_importance/{}_feature_importance.png'
 FEATURE_IMPORTANCE_FULL_MATRIX_PATH_TEMPLATE = 'results/feature_importance/{}_feature_importance_full_matrix.png'
