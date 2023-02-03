@@ -4,9 +4,9 @@ import yaml
 import argparse
 from collections import defaultdict
 from src.utils import triu_inverse
-from config.paths import GRADIENTS_PER_JOBS_PATH_TEMPLATE, CLASSIFICATION_PER_JOBS_PATH_TEMPLATE, LOCAL_SORTERS_PATH, SYSTEM_SORTERS_PATH, FEATURE_IMPORTANCE_PATH_TEMPLATE, FEATURE_IMPORTANCE_FULL_MATRIX_PATH_TEMPLATE
+from config.paths import GRADIENTS_PER_JOBS_PATH_TEMPLATE, CLASSIFICATION_PER_JOBS_PATH_TEMPLATE, FEATURE_IMPORTANCE_PATH_TEMPLATE, FEATURE_IMPORTANCE_FULL_MATRIX_PATH_TEMPLATE, LOCAL_SORTERS_PATH_TEMPLATE, SYSTEM_SORTERS_PATH_TEMPLATE
 from config.feature_importance_visualisation_settings import UR_CORNER_PARAMS, BOTTOM_EDGE_PARAMS, LEFT_EDGE_PARAMS, LL_CORNER_PARAMS, FIG_SIZE, CMAP, V_MIN, V_MAX, DPI
-from config.data_model_params import NUM_MODELS_PER_DATASET, NUM_MARKOV_STATES, NUM_INTERRESIDUE_DISTANCES, NUM_RESIDUES, SKIPPED_DIAG_WIDTH
+from config.data_model_params import NUM_MODELS_PER_DATASET, NUM_MARKOV_STATES, NUM_INTERRESIDUE_DISTANCES, NUM_RESIDUES, SKIPPED_DIAG_WIDTH, REFERENCE_SYSTEM_FOR_ALIGNMENT
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--frames_per_split", type=int, default=5, help="number of frames to evaluate the gradients on")
@@ -37,11 +37,12 @@ def read_file(system: str, split: int, frames_per_split: int, data: str) -> np.n
     loaded_data = np.load(file_path)
     return loaded_data
 
-def read_sorters(data: str) -> list:
+def read_sorters(system: str, data: str) -> list:
     """
     Function for reading the yaml files containing the sorters
     Parameters
     ----------
+    system
     data
 
     Returns
@@ -49,7 +50,7 @@ def read_sorters(data: str) -> list:
 
     """
     assert data in ['local','system'], 'Value of data expected to be "local" or "system"'
-    sorter_path = LOCAL_SORTERS_PATH if data=='local' else SYSTEM_SORTERS_PATH
+    sorter_path = LOCAL_SORTERS_PATH_TEMPLATE.format(d=system) if data=='local' else SYSTEM_SORTERS_PATH_TEMPLATE.format(d=system, ref_data=REFERENCE_SYSTEM_FOR_ALIGNMENT)
     #TODO: adapt the redesign of the sorter path and organization of the dict inside (num_markov_state key, instead system)
     with open(sorter_path, "r") as read:
         sorters = yaml.safe_load(read)
@@ -101,15 +102,15 @@ def main(systems: list, num_splits: int, frames_per_split: int):
 
     ### Apply the sorters
 
-    local_sorters = read_sorters(data='local')
-    global_sorters = read_sorters(data='system')
+    local_sorters = read_sorters(system=system, data='local')
+    global_sorters = read_sorters(system=system, data='system')
 
     # Compose the locals sorter (aligning the models across a single system) and the global sorters (aligning the Markov states across systems)
     composed_sorters = {system: np.empty((NUM_MODELS_PER_DATASET, NUM_MARKOV_STATES)) for system in systems}
 
     for system in systems:
         for i in range(NUM_MODELS_PER_DATASET):
-            composed_sorters[system][i] = np.array(local_sorters[system][i], dtype='int')[global_sorters[system]]
+            composed_sorters[system][i] = np.array(local_sorters[NUM_MARKOV_STATES][i], dtype='int')[global_sorters[NUM_MARKOV_STATES]]
 
     grads_sorted = {
         system: np.empty((NUM_MODELS_PER_DATASET, NUM_MARKOV_STATES, num_frames_total, NUM_INTERRESIDUE_DISTANCES)) for
