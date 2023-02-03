@@ -9,8 +9,8 @@ import argparse
 from typing import Optional, Tuple, List
 from scipy.optimize import linear_sum_assignment
 from src.utils import update_yaml
-from config.paths import LOCAL_SORTERS_PATH_TEMPLATE, CLUSTER_AVG_PATH_TEMPLATE
-from config.data_model_params import NUM_MODELS_PER_DATASET, NUM_MARKOV_STATES
+from config.paths import LOCAL_SORTERS_PATH_TEMPLATE, CLUSTER_AVG_PATH_TEMPLATE, SYSTEM_SORTERS_PATH_TEMPLATE
+from config.data_model_params import NUM_MODELS_PER_DATASET, NUM_MARKOV_STATES, REFERENCE_SYSTEM_FOR_ALIGNMENT
 
 class AlignKMeans:
     def __init__(self, n_clusters: int, max_size: int) -> None:
@@ -169,7 +169,7 @@ def best_sorter(C: np.ndarray, threshold: Optional[float] = None,
     cost_sorter = signed_costs.argsort()
     return best_sorter, costs, cost_sorter
 
-def alignment_wasserstein_mindist_euclidean(num_markov_states: int, num_models: int, avg_mindist_locally_sorted: tuple) -> Tuple[dict, bool]: #TODO: refactor
+def alignment_wasserstein_mindist_euclidean(num_markov_states: int, num_models: int, avg_mindist_locally_sorted: tuple, maximize: bool = False) -> Tuple[dict, bool]: #TODO: refactor
     """
     Align the Markov states by computing the Wasserstein distance
     over ensembles of inter-residue heavy atom minimum distance matrices.
@@ -183,22 +183,20 @@ def alignment_wasserstein_mindist_euclidean(num_markov_states: int, num_models: 
 
     Returns
     -------
-    TODO: info on params
     """
-    maximize = False
 
     uniform = np.full(num_models, 1 / num_models)
     C = np.zeros((num_markov_states, num_markov_states))
     for i in range(num_markov_states):
         for j in range(num_markov_states):
-            set1 = avg_mindist_locally_sorted[0][:, i] #TODO: get
-            set2 = avg_mindist_locally_sorted[1][:, j] #TODO: get
+            set1 = avg_mindist_locally_sorted[0][:, i]
+            set2 = avg_mindist_locally_sorted[1][:, j]
             ot_cost_mat = np.linalg.norm(set1[:, np.newaxis] - set2[np.newaxis, :], axis=-1)
             ot_plan = ot.emd(uniform, uniform, ot_cost_mat)
             C[i, j] = (ot_cost_mat * ot_plan).sum()
     return C, maximize
 
-def apply_local_sort(system: str, num_models: int, num_markov_states: int, avg_cluster_mindists: np.ndarray) -> np.ndarray:
+def perform_local_sort(system: str, num_models: int, num_markov_states: int, avg_cluster_mindists: np.ndarray) -> np.ndarray:
     """
 
     Execute the local alignment algorithm and update the yaml file containing the alignments.
@@ -224,14 +222,7 @@ def apply_local_sort(system: str, num_models: int, num_markov_states: int, avg_c
     update_yaml(filename=filename, new_data=data)
     return sorter
 
-
-# #TODO adapt the application of the global alignment
-# alignment = ... #AlignSystemsCommonPath object for pair of systems
-# alignment.local_sort(inner_sort_method="mindist_kmeans")
-# alignment("wasserstein_mindist_euclidean")
-
-
-def produce_alignments(args: argparse.Namespace, avg_cluster_mindists: dict) -> None:
+def produce_alignments(args: argparse.Namespace, avg_cluster_mindists: dict, num_markov_states: int) -> None:
     """
     Function invoking both the local and the inter-system ('global') alignments. Alignments are saved into yaml files at
     designated location (as specified in config.paths.py).
@@ -240,21 +231,37 @@ def produce_alignments(args: argparse.Namespace, avg_cluster_mindists: dict) -> 
     ----------
     args, argparse.Namespace - arguments passed by the user, mainly should contain the names of the systems at hand
     avg_cluster_mindists, dict - key = system name, value = np.ndarray with precomputed avg cluster  features (interresidue matrices)
+    num_markov_states, int - Number of the Markov states for the underlying models
 
     Returns
     -------
     """
+    assert len(args.systems) > 1, "At least 2 systems are required for the inter-system alignment."
+
+    locally_sorted_avg_clust_mindists = {}
     for system in args.systems:
         # First locally align all systems
-        _ = apply_local_sort(system=system, num_models=NUM_MODELS_PER_DATASET, num_markov_states=NUM_MARKOV_STATES, avg_cluster_mindists=avg_cluster_mindists[system])
+        local_sorter = perform_local_sort(system=system, num_models=NUM_MODELS_PER_DATASET, num_markov_states=NUM_MARKOV_STATES, avg_cluster_mindists=avg_cluster_mindists[system])
+        # Apply the local sort to the mindists
+        locally_sorted_avg_clust_mindists[system] = avg_cluster_mindists[system][local_sorter]
 
-    #TODO: do the global alignment and manage the systems in correct order - organize the mindists into 2-tuples
+    system_pairs = [(args.systems[0], second_system) for second_system in args.systems[1:]]
+
+    for s1,s2 in system_pairs:
+        avg_mindist_locally_sorted = (locally_sorted_avg_clust_mindists[s1], locally_sorted_avg_clust_mindists[s2])
+        C, maximize = alignment_wasserstein_mindist_euclidean(num_markov_states=NUM_MARKOV_STATES, num_models=NUM_MODELS_PER_DATASET, avg_mindist_locally_sorted=avg_mindist_locally_sorted)
+        best_sorter, costs, cost_sorter = best_sorter(C=C, treshold=None, maximize=maximize)
+        #save the system sorters
+        data = {num_markov_states: best_sorter.tolist()}
+        filename = SYSTEM_SORTERS_PATH_TEMPLATE.format(d=system, ref_data=REFERENCE_SYSTEM_FOR_ALIGNMENT)
+        update_yaml(filename=filename, new_data=data)
+
+
+    #Verify that the system sorters already contain the local sort information - should be in visualize_gradients
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--systems', nargs='+',
-                        help='List (separated by spaces) the names of the systems for which you wish to preprocess the data.',
-                        required=True)
+    parser.add_argument('--systems', nargs='+', help='List (separated by spaces) the names of the systems for which you wish to preprocess the data.', required=True)
     args = parser.parse_args()
 
     avg_cluster_mindists = {}
