@@ -1,6 +1,8 @@
 import numpy as np
 import pyemma as pe
 import h5py
+import logging
+logging.basicConfig(encoding='utf-8', level=logging.INFO)
 from src.utils import update_yaml
 from config.paths import TRAJECTORY_PATHS_TEMPLATE, TOPOLOGY_PATH_TEMPLATE, MINDIST_PATH_TEMPLATE, INFO_PATH_TEMPLATE, CLUSTER_AVG_PATH_TEMPLATE, MODEL_OUTPUTS_PATH_TEMPLATE
 from config.data_model_params import NUM_MARKOV_STATES, NUM_MODELS_PER_DATASET
@@ -102,4 +104,4 @@ if __name__ == '__main__':
         total_frames_in_dataset = sum(traj_lengths)
         classification_probs = read_classification_scores(system=system, num_models=NUM_MODELS_PER_DATASET, num_markov_states=NUM_MARKOV_STATES,total_frames=total_frames_in_dataset)
         _ = compute_cluster_avg_mindist(system, num_models=NUM_MODELS_PER_DATASET, num_markov_states=NUM_MARKOV_STATES, mindist_flat=mindist_flat, classification_probs=classification_probs)
-
+        logging.info(f"System {system} processed.")

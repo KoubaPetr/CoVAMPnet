@@ -13,7 +13,8 @@ the .yml file with the frame indices should be prepared apriori in results/frame
 files are not present, they will be generated with random frames (not ensuring disjointness across jobs).
 
 """
-
+import logging
+logging.basicConfig(encoding='utf-8', level=logging.INFO)
 
 from src.utils import unflatten
 from os.path import join
@@ -192,7 +193,7 @@ def main(systems: list[str] = ['ZS-ab2', 'ZS-ab3', 'ZS-ab4']):
     classifications = {}
 
     start = time.time()
-    for system in systems: #TODO redesign the loop
+    for system in systems:
         print('Iterating systems')
         params = data_pars[system]
         if os.path.exists(GRADIENTS_PER_JOBS_PATH_TEMPLATE.format(system,args.num_frames,args.job_no)) and os.path.exists('{}_classification_{}_job_{}.npy'.format(system,args.num_frames,args.job_no)):
@@ -218,6 +219,9 @@ def main(systems: list[str] = ['ZS-ab2', 'ZS-ab3', 'ZS-ab4']):
             np.save(CLASSIFICATION_PER_JOBS_PATH_TEMPLATE.format(system,args.num_frames,args.job_no),classifications[system])
         else:
             raise ValueError('Only one of the files (grads or classifications) is missing. Either both or none of them should be precomputed - to ensure consistency.')
+
+        logging.info(f"Classifications for frames specified in {FRAMES_PER_JOBS_PATH_TEMPLATE.format(args.num_frames, args.job_no)} and for the system {system} computed and saved to {CLASSIFICATION_PER_JOBS_PATH_TEMPLATE.format(system,args.num_frames,args.job_no)}")
+        logging.info(f"Gradients for system {system} computed and saved to {GRADIENTS_PER_JOBS_PATH_TEMPLATE.format(system, args.num_frames, args.job_no)}")
 
 if __name__ == '__main__':
     args = parser.parse_args()
