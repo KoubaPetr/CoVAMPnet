@@ -3,6 +3,9 @@ This module provides utility functions for aligning Markov states between
 different training attempts (different models trained for a same system)
 and different systems (aligning the ensembles of models for different systems).
 """
+import logging
+logging.basicConfig(encoding='utf-8', level=logging.INFO)
+
 import numpy as np
 import ot
 import argparse
@@ -10,7 +13,7 @@ from typing import Optional, Tuple, List
 from scipy.optimize import linear_sum_assignment
 from src.utils import update_yaml
 from config.paths import LOCAL_SORTERS_PATH_TEMPLATE, CLUSTER_AVG_PATH_TEMPLATE, SYSTEM_SORTERS_PATH_TEMPLATE
-from config.data_model_params import NUM_MODELS_PER_DATASET, NUM_MARKOV_STATES, REFERENCE_SYSTEM_FOR_ALIGNMENT
+from config.data_model_params import NUM_MODELS_PER_DATASET, NUM_MARKOV_STATES
 
 class AlignKMeans:
     def __init__(self, n_clusters: int, max_size: int) -> None:
@@ -236,37 +239,44 @@ def produce_alignments(args: argparse.Namespace, avg_cluster_mindists: dict, num
     Returns
     -------
     """
-    assert len(args.systems) > 1, "At least 2 systems are required for the inter-system alignment."
+    assert (len(args.other_systems) > 0) and (len(args.reference_system) > 0), "At least 2 systems are required for the inter-system alignment."
 
     locally_sorted_avg_clust_mindists = {}
-    for system in args.systems:
+    for system in args.all_systems:
         # First locally align all systems
         local_sorter = perform_local_sort(system=system, num_models=NUM_MODELS_PER_DATASET, num_markov_states=NUM_MARKOV_STATES, avg_cluster_mindists=avg_cluster_mindists[system])
         # Apply the local sort to the mindists
-        locally_sorted_avg_clust_mindists[system] = avg_cluster_mindists[system][local_sorter]
+        locally_sorted_avg_clust_mindists[system] = np.array([avg_cluster_mindists[system][model_idx,:,:][local_sorter[model_idx]] for model_idx in range(local_sorter.shape[0])])
+        logging.info(f"System {system} aligned locally.")
 
-    system_pairs = [(args.systems[0], second_system) for second_system in args.systems[1:]]
+    system_pairs = [(other_system, args.reference_system) for other_system in args.other_systems]
 
     for s1,s2 in system_pairs:
         avg_mindist_locally_sorted = (locally_sorted_avg_clust_mindists[s1], locally_sorted_avg_clust_mindists[s2])
         C, maximize = alignment_wasserstein_mindist_euclidean(num_markov_states=NUM_MARKOV_STATES, num_models=NUM_MODELS_PER_DATASET, avg_mindist_locally_sorted=avg_mindist_locally_sorted)
-        best_sorter, costs, cost_sorter = best_sorter(C=C, treshold=None, maximize=maximize)
+        selected_sorter, costs, cost_sorter = best_sorter(C=C, threshold=None, maximize=maximize)
         #save the system sorters
-        data = {num_markov_states: best_sorter.tolist()}
-        filename = SYSTEM_SORTERS_PATH_TEMPLATE.format(d=system, ref_data=REFERENCE_SYSTEM_FOR_ALIGNMENT)
+        data = {num_markov_states: selected_sorter.tolist()}
+        filename = SYSTEM_SORTERS_PATH_TEMPLATE.format(d=system, ref_data=args.reference_system)
         update_yaml(filename=filename, new_data=data)
+        logging.info(f"System {s1} aligned w.r.t. system {args.reference_system}.")
 
 
     #Verify that the system sorters already contain the local sort information - should be in visualize_gradients
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--systems', nargs='+', help='List (separated by spaces) the names of the systems for which you wish to preprocess the data.', required=True)
+    parser.add_argument('--reference_system', type=str,
+                        help='Name of the system w.r.t. which the other systems should be aligned.')
+    parser.add_argument('--other_systems', nargs='+',
+                        help='List (separated by spaces) the names of the systems for which you wish to preprocess the data.',
+                        required=True)
     args = parser.parse_args()
+    args.all_systems = [args.reference_system, *args.other_systems]
 
     avg_cluster_mindists = {}
-    for system in args.systems:
+    for system in args.all_systems:
         filepath = CLUSTER_AVG_PATH_TEMPLATE.format(d=system, ms=NUM_MARKOV_STATES)
         data = np.load(filepath)
         avg_cluster_mindists[system] = data
-    produce_alignments(args, avg_cluster_mindists)
+    produce_alignments(args, avg_cluster_mindists, num_markov_states=NUM_MARKOV_STATES)
