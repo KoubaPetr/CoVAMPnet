@@ -41,6 +41,31 @@ parser.add_argument('--systems', nargs='+',
                     help='List (separated by spaces) the names of the systems for which you wish to preprocess the data.',
                     required=True)
 
+def select_frames_for_eval(args: argparse.Namespace, system: str, data_pars: dict) -> dict:
+    """
+
+    Parameters
+    ----------
+    args, argparse.Namespace - input by user
+    system, str - name of the system at hand
+    data_pars, DataParametes object
+
+    Returns dict, read from or generated - containing the ids of the frames for classification and for evaluation of the gradients
+    -------
+
+    """
+    file_path = FRAMES_PER_JOBS_PATH_TEMPLATE.format(d=system, nf=args.num_frames, jid=args.job_no)
+    if os.path.exists(file_path):
+        with open(file_path, 'r') as yamlfile:
+            frame_ids = yaml.safe_load(yamlfile)
+        print('Reading frames')
+    else:
+        with open(file_path, 'w') as outfile:
+            frame_ids = {system: random.sample(range(0, data_pars[system].num_frames), args.num_frames)}  # Pick frames on which to evaluate for each system
+            yaml.dump(frame_ids, outfile, default_flow_style=False)
+
+    return frame_ids
+
 class DataParameters:
     """
     Class reading and holding data and parameters for our analysis
@@ -179,15 +204,6 @@ def main(systems: list[str] = ['ZS-ab2', 'ZS-ab3', 'ZS-ab4']):
             single_models.append(single_chi_model)
             models_for_systems[system] = single_models
 
-    if os.path.exists(FRAMES_PER_JOBS_PATH_TEMPLATE.format(args.num_frames, args.job_no)):
-        with open(FRAMES_PER_JOBS_PATH_TEMPLATE.format(args.num_frames, args.job_no), 'r') as yamlfile:
-            FRAME_IDs = yaml.safe_load(yamlfile)
-        print('Reading frames')
-    else:
-        with open(FRAMES_PER_JOBS_PATH_TEMPLATE.format(args.num_frames,args.job_no), 'w') as outfile:
-            FRAME_IDs = {system: random.sample(range(0, data_pars[system].num_frames), args.num_frames) for system in systems} # Pick frames on which to evaluate for each system
-            yaml.dump(FRAME_IDs, outfile, default_flow_style=False)
-
 
     v=VanillaGradients()
     CLASSES = (0,1,2)
@@ -196,19 +212,21 @@ def main(systems: list[str] = ['ZS-ab2', 'ZS-ab3', 'ZS-ab4']):
 
     start = time.time()
     for system in systems:
-        print('Iterating systems')
+        logging.info(f'Iterating systems - system = {system}')
+        frame_ids = select_frames_for_eval(args, system=system, data_pars=data_pars)
         params = data_pars[system]
-        if os.path.exists(GRADIENTS_PER_JOBS_PATH_TEMPLATE.format(system,args.num_frames,args.job_no)) and os.path.exists('{}_classification_{}_job_{}.npy'.format(system,args.num_frames,args.job_no)):
-            grads[system] = np.load(GRADIENTS_PER_JOBS_PATH_TEMPLATE.format(system,args.num_frames,args.job_no))
-            classifications[system] = np.load(CLASSIFICATION_PER_JOBS_PATH_TEMPLATE.format(system,args.num_frames,args.job_no))
-        elif (not os.path.exists(GRADIENTS_PER_JOBS_PATH_TEMPLATE.format(system,args.num_frames,args.job_no))) and (not os.path.exists('{}_classification_{}_job_{}.npy'.format(system,args.num_frames,args.job_no))):
+
+        if os.path.exists(GRADIENTS_PER_JOBS_PATH_TEMPLATE.format(d=system,nf=args.num_frames,jid=args.job_no)) and os.path.exists('{}_classification_{}_job_{}.npy'.format(system,args.num_frames,args.job_no)):
+            grads[system] = np.load(GRADIENTS_PER_JOBS_PATH_TEMPLATE.format(d=system,nf=args.num_frames,jid=args.job_no))
+            classifications[system] = np.load(CLASSIFICATION_PER_JOBS_PATH_TEMPLATE.format(d=system,nf=args.num_frames,jid=args.job_no))
+        elif (not os.path.exists(GRADIENTS_PER_JOBS_PATH_TEMPLATE.format(d=system,nf=args.num_frames,jid=args.job_no))) and (not os.path.exists('{}_classification_{}_job_{}.npy'.format(system,args.num_frames,args.job_no))):
             grads_per_system = [[[0]*args.num_frames for _ in range(3)] for _ in range(params.num_selected_models)] # np.zeros((20,3,FRAMES_PER_SYSTEM,1,780))
             class_scores_per_system = np.zeros((params.num_selected_models,3,args.num_frames))
 
             for m_idx, m in enumerate(models_for_systems[system]):
-                print('model {} evaluation'.format(m_idx))
+                logging.info('Model {} evaluation'.format(m_idx))
                 for c_idx,c in enumerate(CLASSES): #for alignment plug in proper sorter instead of CLASSES
-                    for frame_idx, frame_id in enumerate(FRAME_IDs[system]): #TODO: check the alignment + parallelize
+                    for frame_idx, frame_id in enumerate(frame_ids[system]): #TODO: check the alignment + parallelize
                         frame = koop.generator.data_flat[frame_id].reshape(1,-1)
                         grads_per_system[m_idx][c_idx][frame_idx] = v.explain(validation_data=frame, model=m, class_index=c)[0,:] #here potential alignment from c to c_idx
                         class_scores_per_system[m_idx, c_idx, frame_idx] = m.predict(frame)[0][c] #here potential alignment conversion from c to c_idx
@@ -217,13 +235,13 @@ def main(systems: list[str] = ['ZS-ab2', 'ZS-ab3', 'ZS-ab4']):
             grads[system] = np.array(grads_per_system)
             classifications[system] = class_scores_per_system
 
-            np.save(GRADIENTS_PER_JOBS_PATH_TEMPLATE.format(system, args.num_frames,args.job_no),grads[system])
-            np.save(CLASSIFICATION_PER_JOBS_PATH_TEMPLATE.format(system,args.num_frames,args.job_no),classifications[system])
+            np.save(GRADIENTS_PER_JOBS_PATH_TEMPLATE.format(d=system, nf=args.num_frames, jid=args.job_no),grads[system])
+            np.save(CLASSIFICATION_PER_JOBS_PATH_TEMPLATE.format(d=system, nf=args.num_frames, jid=args.job_no),classifications[system])
         else:
             raise ValueError('Only one of the files (grads or classifications) is missing. Either both or none of them should be precomputed - to ensure consistency.')
 
-        logging.info(f"Classifications for frames specified in {FRAMES_PER_JOBS_PATH_TEMPLATE.format(args.num_frames, args.job_no)} and for the system {system} computed and saved to {CLASSIFICATION_PER_JOBS_PATH_TEMPLATE.format(system,args.num_frames,args.job_no)}")
-        logging.info(f"Gradients for system {system} computed and saved to {GRADIENTS_PER_JOBS_PATH_TEMPLATE.format(system, args.num_frames, args.job_no)}")
+        logging.info(f"Classifications for frames specified in {FRAMES_PER_JOBS_PATH_TEMPLATE.format(d= system, nf=args.num_frames, jid=args.job_no)} and for the system {system} computed and saved to {CLASSIFICATION_PER_JOBS_PATH_TEMPLATE.format(d=system,nf=args.num_frames,jid=args.job_no)}")
+        logging.info(f"Gradients for system {system} computed and saved to {GRADIENTS_PER_JOBS_PATH_TEMPLATE.format(d=system, nf=args.num_frames, jid=args.job_no)}")
 
 if __name__ == '__main__':
     args = parser.parse_args()
