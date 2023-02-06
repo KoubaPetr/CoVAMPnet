@@ -23,6 +23,7 @@ import yaml
 import pickle
 import random
 import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import time
 import gc
 import argparse
@@ -30,6 +31,7 @@ from src.model import KoopmanModel
 from src.data_fcts import DataGenerator
 from src.vanilla_gradients import VanillaGradients
 import tensorflow as tf
+tf.get_logger().setLevel('INFO')
 from config.paths import INFO_PATH_TEMPLATE, MODEL_PATH_TEMPLATE, MODEL_HISTORY_PATH_TEMPLATE, PRECOMPUTED_TRAJECTORIES_PATH_TEMPLATE, DATASPLITS_PATH_TEMPLATE, FRAMES_PER_JOBS_PATH_TEMPLATE, CLASSIFICATION_PER_JOBS_PATH_TEMPLATE, GRADIENTS_PER_JOBS_PATH_TEMPLATE
 
 parser = argparse.ArgumentParser()
