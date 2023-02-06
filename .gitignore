@@ -1,3 +1,6 @@
 .idea
 config/__pycache__/
+data/model_outputs/ZS-ab2/data.hdf5
+data/model_outputs/ZS-ab3/data.hdf5
+data/model_outputs/ZS-ab4/data.hdf5
 
