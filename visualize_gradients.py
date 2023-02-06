@@ -6,11 +6,12 @@ from collections import defaultdict
 from src.utils import triu_inverse
 from config.paths import GRADIENTS_PER_JOBS_PATH_TEMPLATE, CLASSIFICATION_PER_JOBS_PATH_TEMPLATE, FEATURE_IMPORTANCE_PATH_TEMPLATE, FEATURE_IMPORTANCE_FULL_MATRIX_PATH_TEMPLATE, LOCAL_SORTERS_PATH_TEMPLATE, SYSTEM_SORTERS_PATH_TEMPLATE
 from config.feature_importance_visualisation_settings import UR_CORNER_PARAMS, BOTTOM_EDGE_PARAMS, LEFT_EDGE_PARAMS, LL_CORNER_PARAMS, FIG_SIZE, CMAP, V_MIN, V_MAX, DPI
-from config.data_model_params import NUM_MODELS_PER_DATASET, NUM_MARKOV_STATES, NUM_INTERRESIDUE_DISTANCES, NUM_RESIDUES, SKIPPED_DIAG_WIDTH, REFERENCE_SYSTEM_FOR_ALIGNMENT
+from config.data_model_params import NUM_MODELS_PER_DATASET, NUM_MARKOV_STATES, NUM_INTERRESIDUE_DISTANCES, NUM_RESIDUES, SKIPPED_DIAG_WIDTH
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--frames_per_split", type=int, default=5, help="number of frames to evaluate the gradients on")
-parser.add_argument('--num_splits', type=int, default=1, help='attempt number')
+parser.add_argument("--frames_per_split", type=int, default=5, help="Number of frames on which the gradients were evaluated in every split.")
+parser.add_argument('--num_splits', type=int, default=1, help='Number of splits (each containing frames_per_split frames.')
+parser.add_argument('--reference_system', type=str, help='')
 parser.add_argument('--systems', nargs='+',
                     help='List (separated by spaces) the names of the systems for which you wish to preprocess the data.',
                     required=True)
@@ -33,24 +34,25 @@ def read_file(system: str, split: int, frames_per_split: int, data: str) -> np.n
     """
     assert data in ['grads','classifications'], 'Value of data expected to be "grads" or "classifications"'
     file_path_template = GRADIENTS_PER_JOBS_PATH_TEMPLATE if data=='grads' else CLASSIFICATION_PER_JOBS_PATH_TEMPLATE
-    file_path = file_path_template.format(system, frames_per_split, split)
+    file_path = file_path_template.format(d=system, nf=frames_per_split, jid=split)
     loaded_data = np.load(file_path)
     return loaded_data
 
-def read_sorters(system: str, data: str) -> list:
+def read_sorters(system: str, data: str, args:argparse.Namespace = None) -> list:
     """
     Function for reading the yaml files containing the sorters
     Parameters
     ----------
     system
     data
+    args
 
     Returns
     -------
 
     """
     assert data in ['local','system'], 'Value of data expected to be "local" or "system"'
-    sorter_path = LOCAL_SORTERS_PATH_TEMPLATE.format(d=system) if data=='local' else SYSTEM_SORTERS_PATH_TEMPLATE.format(d=system, ref_data=REFERENCE_SYSTEM_FOR_ALIGNMENT)
+    sorter_path = LOCAL_SORTERS_PATH_TEMPLATE.format(d=system) if data=='local' else SYSTEM_SORTERS_PATH_TEMPLATE.format(d=system, ref_data=args.reference_system)
     #TODO: adapt the redesign of the sorter path and organization of the dict inside (num_markov_state key, instead system)
     with open(sorter_path, "r") as read:
         sorters = yaml.safe_load(read)
@@ -103,7 +105,7 @@ def main(systems: list, num_splits: int, frames_per_split: int):
     ### Apply the sorters
 
     local_sorters = read_sorters(system=system, data='local')
-    global_sorters = read_sorters(system=system, data='system')
+    global_sorters = read_sorters(system=system, data='system', args=args)
 
     # Compose the locals sorter (aligning the models across a single system) and the global sorters (aligning the Markov states across systems)
     composed_sorters = {system: np.empty((NUM_MODELS_PER_DATASET, NUM_MARKOV_STATES)) for system in systems}
