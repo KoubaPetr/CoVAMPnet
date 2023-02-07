@@ -4,7 +4,8 @@ Code supplementing the paper "Effects of Alzheimer’s Disease Drug Candidates o
 
 For training the VAMPnet and for performing the analyses over a single system, we acknowledge and refer to the [repository](https://github.com/vendruscolo-lab/ab42-kinetic-ensemble).
 
-For the Comparative Markov State Analysis (CoVAMPnet), we provide the code in this repository and supplementing data at [Zenodo](TODO)
+For the Comparative Markov State Analysis (CoVAMPnet), we provide the code in this repository and supplementing data [Here (17 GB)](https://data.ciirc.cvut.cz/public/projects/2023CoVAMPnet/covampnet_data.tar.gz).
+
 ## Running CoVAMPnet
 
 ### Requirements
@@ -39,22 +40,29 @@ python align_models.py --reference_system ZS-ab2 --other_systems ZS-ab3 ZS-ab4
 python visualize_gradients.py --num_frames 5 --num_splits 1 --systems ZS-ab2 ZS-ab3 ZS-ab4 --reference_system ZS-ab2
 ```
 
-1) Put trajectories inside data/trajectories/SYSTEM_NAME/ - as in the example (i.e. .xtc data inside e*s*_0/ folders and filtered.pdb topology file placed next to the e*s*_0/ folders)
-2) Run python extract_mindist_representation.py --systems ZS-ab2 ZS-ab3 ZS-ab4
-3) Run 
-4) python compute_gradients.py --num_frames 5 --job_no 0 --systems ZS-ab2 ZS-ab3 ZS-ab4#(just as a test, for real reproduction, first place .yml files listing the frames for each job into results/frames_for_gradient_jobs and run the jobs, probably using an HPC scheduler system)
-5) Run python align_models.py --reference_system ZS-ab2 --other_systems ZS-ab3 ZS-ab4
-6) Run python visualize_gradients.py --num_frames 5 --num_splits 1 --systems ZS-ab2 ZS-ab3 ZS-ab4 --reference_system ZS-ab2
-
-
 ### Reproducing CoVAMPnet results from the paper
 
 ### Using CoVAMPnet for your own data
 
-1) Put trajectories inside data/trajectories/SYSTEM_NAME/ - as in the example (i.e. .xtc data inside e*s*_0/ folders and filtered.pdb topology file placed next to the e*s*_0/ folders)
-2) Run python extract_mindist_representation.py --systems ZS-ab2 ZS-ab3 ZS-ab4
-3) Run python compute_gradients.py --num_frames 5 --job_no 0 --systems ZS-ab2 ZS-ab3 ZS-ab4 #(just as a test, for real reproduction, first place .yml files listing the frames for each job into results/frames_for_gradient_jobs and run the jobs, probably using an HPC scheduler system)
-4) Run python align_models.py --reference_system ZS-ab2 --other_systems ZS-ab3 ZS-ab4
-5) Run python visualize_gradients.py --num_frames 5 --num_splits 1 --systems ZS-ab2 ZS-ab3 ZS-ab4 --reference_system ZS-ab2
+1) Prepare data: TODO
+Put trajectories inside data/trajectories/SYSTEM_NAME/ - as in the toy example (i.e. .xtc data inside e*s*_0/ folders and filtered.pdb topology file placed next to the e*s*_0/ folders)
+3) Run python extract_mindist_representation.py --systems ZS-ab2 ZS-ab3 ZS-ab4
+4) Run python compute_gradients.py --num_frames 5 --job_no 0 --systems ZS-ab2 ZS-ab3 ZS-ab4 #(just as a test, for real reproduction, first place .yml files listing the frames for each job into results/frames_for_gradient_jobs and run the jobs, probably using an HPC scheduler system)
+5) Run python align_models.py --reference_system ZS-ab2 --other_systems ZS-ab3 ZS-ab4
+6) Run python visualize_gradients.py --num_frames 5 --num_splits 1 --systems ZS-ab2 ZS-ab3 ZS-ab4 --reference_system ZS-ab2
 
+## Outputs of CoVAMPnet
 
+Below we describe the use and interpretation of the outputs of CoVAMPnet.
+
+### Alignment of Markov State Models for a single system and between two different systems
+
+The sorters (files containing the indices, suggesting how to align the models both for a single system and between different systems) can be found in `results/sorters`.
+
+The use of the sorters is the following:
+    
+TODO
+
+### Visualization of feature importance
+
+The visualizations of the importance of particular inter-residue distances for the classification into particular Markov States can be found in `results/feature_importance`.
