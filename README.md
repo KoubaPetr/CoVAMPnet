@@ -4,7 +4,7 @@ Code supplementing the paper "Effects of Alzheimer’s Disease Drug Candidates o
 
 For training the VAMPnet and for performing the analyses over a single system, we acknowledge and refer to the [repository](https://github.com/vendruscolo-lab/ab42-kinetic-ensemble).
 
-For the Comparative Markov State Analysis (CoVAMPnet), we provide the code in this repository and supplementing data [Here (17 GB)](https://data.ciirc.cvut.cz/public/projects/2023CoVAMPnet/covampnet_data.tar.gz).
+For the Comparative Markov State Analysis (CoVAMPnet), we provide the code in this repository and supplementing data [on project web page (17 GB)](https://data.ciirc.cvut.cz/public/projects/2023CoVAMPnet/covampnet_data.tar.gz).
 
 ## Running CoVAMPnet
 
