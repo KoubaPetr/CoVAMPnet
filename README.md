@@ -49,6 +49,7 @@ Here we describe how to use our proposed directory structure (recommended). Alta
 
 Prepare data:
 1) Place trajectories inside `data/trajectories/SYSTEM_NAME/` - follow the diagram below (analogically to the toy example - data contained in this repo):
+```
 .
 └── data/
     └── trajectories/
@@ -64,30 +65,35 @@ Prepare data:
         ├── SYSTEM_NAME_2/
         │   └── ...
         └── ...
-2) Place your models, files with validation loss scores and files with the precomputed inferred values for all simulation frames saved as `.hdf5` or `.p` (p for pickle) files (organized in the same way as the respective files obtained by the code in [Ab-42 Kinetic ensemble repo](https://github.com/vendruscolo-lab/ab42-kinetic-ensemble)) into their place in `data/`, see below:
+```
 
+3) Place your models, files with validation loss scores and files with the precomputed inferred values for all simulation frames saved as `.hdf5` or `.p` (p for pickle) files (organized in the same way as the respective files obtained by the code in [Ab-42 Kinetic ensemble repo](https://github.com/vendruscolo-lab/ab42-kinetic-ensemble)) into their place in `data/`, see below:
+```
 .
 └── data/
     ├── models/
     │   ├── SYSTEM_NAME_1/
-    │   │   ├── model-ve-SYSTEM_NAME-M-MID-intermediate-2.hdf5 #Fill in name of your system, M= #markov_states , MID= model_id (i.e. 0-19 for 20 trained models for each system)
+    │   │   ├── model-ve-SYSTEM_NAME-M-MID-intermediate-2.hdf5 //Fill in name of your system, M= #markov_states , MID= model_id (i.e. 0-19 for 20 trained models for each system)
     │   │   └── ...
     │   └── SYSTEM_NAME_2/
     │       └── ...
     ├── model_loss_scores/
     │   ├── SYSTEM_NAME_1/
-    │   │   ├── model-histories-SYSTEM_NAME-M-MID.p #Fill in name of your system, M= #markov_states , MID= model_id (i.e. 0-19 for 20 trained models for each system)
+    │   │   ├── model-histories-SYSTEM_NAME-M-MID.p //Fill in name of your system, M= #markov_states , MID= model_id (i.e. 0-19 for 20 trained models for each system)
     │   │   └── ...    
     │   ├── SYSTEM_NAME_2/
     │   │   └── ...
     │   └── ...
     └── model_outputs/
         ├── SYSTEM_NAME_1/
-        │   └── data.hdf5 #TODO
+        │   └── data.hdf5 //TODO
         ├── SYSTEM_NAME_2/
         │   └── ...
         └── ...
-3) In terminal in the root directory, run the following sequence of commands (plugging in your system names, assuming the alignment should be performed w.r.t. SYSTEM_NAME_1):
+
+```
+
+4) In terminal in the root directory, run the following sequence of commands (plugging in your system names, assuming the alignment should be performed w.r.t. SYSTEM_NAME_1):
 ```bash
 python extract_mindist_representation.py --systems SYSTEM_NAME_1 SYSTEM_NAME_2 SYSTEM_NAME_3
 python compute_gradients.py --num_frames 5 --job_no 0 --systems SYSTEM_NAME_1 SYSTEM_NAME_2 SYSTEM_NAME_3
