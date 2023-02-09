@@ -161,10 +161,8 @@ aligned_probs_system_2 = aligned_probs_system_2[:,:,global_sorter[NUM_MARKOV_STA
 
 ### Visualization of feature importance
 
-The visualizations of the importance of particular inter-residue distances for the classification into particular Markov States can be found in `results/feature_importance`. Example of such a visualization is presented in Fig.1 below.
+The visualizations of the importance of particular inter-residue distances for the classification into particular Markov States can be found in `results/feature_importance`. Example of such a visualization is presented in **Fig.1** below. Based on the red and blue pixels in these visualizations, it can be inferred which pairs of residues are preferred to be far from (or close to) one another by which Markov state.
 
 | ![Alt text](results/examples/ZS-ab2_saliency_full.png) | 
 |:--| 
 | **Fig. 1:** *Visualization of the feature importance for assignment of inter-residue distance maps representing MD frames into particular Markov state. Row number in the grid denotes Markov state with respect to which the assignment probability is changing based on an increase in distance of two residues denoted by the coordinates in the subfigure. The column number denotes the Markov state to which the MD frames used for the evaluation belong.* |
-
-Based on the red and blue pixels in these visualizations, it can be inferred which pairs of residues are preferred to be far from (or close to) one another by which Markov state.
