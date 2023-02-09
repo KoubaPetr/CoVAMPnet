@@ -125,18 +125,18 @@ The use of the sorters is demonstrated in the example below, we assume the toy e
     
 ```python
 import numpy as np
-import h5py
+
 from config.paths import MODEL_OUTPUTS_PATH_TEMPLATE
 from config.data_model_params import NUM_MODELS_PER_DATASET, NUM_MARKOV_STATES, NUM_RESIDUES
 from extract_mindist_representation import read_classification_scores, preprocess_trajectories
 from visualize_gradients import read_sorters
 
 #Prepara data for the example
-SYSTEMS = ('ZS-ab2', 'ZS-ab3')
+SYSTEMS = ('ZS-ab2', 'ZS-ab4')
 REF_SYSTEM = 'ZS-ab2'
 frame_probs = [None, None]
 for i,s in enumerate(SYSTEMS):
-    data_path = MODEL_OUTPUTS_PATH_TEMPLATE.format(s)
+    data_path = MODEL_OUTPUTS_PATH_TEMPLATE.format(d=s)
     _, traj_lengths = preprocess_trajectories(s, nres=NUM_RESIDUES)
     total_frames_in_dataset = sum(traj_lengths)
     frame_probs[i] = read_classification_scores(s, NUM_MODELS_PER_DATASET, NUM_MARKOV_STATES, total_frames_in_dataset) #load Markov State probabilities for all frames and all models organized in a single array
@@ -151,11 +151,11 @@ local_sorters = {s: read_sorters(system=s, data='local') for s in SYSTEMS}
 global_sorter = read_sorters(system=SYSTEMS[1], data='system', reference_system=REF_SYSTEM) #we are aligning wrt 'ZS-ab2', therefore alignment for 'ZS-ab2' is trivial and we dont need it
 
 #Perform local alignments, to account for the arbitrary labeling each of the independently trained models have - even if all models are trained on the same data
-aligned_probs_system_1 = frame_probs[0][:,:,local_sorters[SYSTEMS[0]]]
-aligned_probs_system_2 = frame_probs[1][:,:,local_sorters[SYSTEMS[1]]]
+aligned_probs_system_1 = np.array([frame_probs[0][i,:,local_sorters[SYSTEMS[0]][NUM_MARKOV_STATES][i]] for i in range(NUM_MODELS_PER_DATASET)]).transpose(0,2,1)
+aligned_probs_system_2 = np.array([frame_probs[1][i,:,local_sorters[SYSTEMS[1]][NUM_MARKOV_STATES][i]] for i in range(NUM_MODELS_PER_DATASET)]).transpose(0,2,1)
 
 #Perform global alignment of the second system wrt the first one
-aligned_probs_system_2 = aligned_probs_system_2[:,:,global_sorter]
+aligned_probs_system_2 = aligned_probs_system_2[:,:,global_sorter[NUM_MARKOV_STATES]]
 
 ```
 
