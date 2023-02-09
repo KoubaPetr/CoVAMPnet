@@ -14,6 +14,6 @@ module load CUDA/10.1.243-GCC-8.3.0
 module load Anaconda3/5.0.1
 source /opt/apps/software/Anaconda3/5.0.1/etc/profile.d/conda.sh
 
-conda activate tf
+conda activate covampnet
 
 python gradient_job.py --num_frames 5 --job_no ${SLURM_ARRAY_TASK_ID}
