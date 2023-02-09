@@ -52,8 +52,36 @@ cp -TRv covampnet_data/ data/
 mv covampnet_data/ data/
 ```
 
-2) TODO:
+2) Preprocess data:
 
+```bash
+python extract_mindist_representation.py --systems ZS-ab2 ZS-ab3 ZS-ab4
+```
+
+3) Precompute gradients. This part can be easily parallelized and typically this would be done on an HPC cluster. Therefore, the particular commands would depend on users cluster and its scheduling system. We used cluster powered by SLURM scheduling system and the command there would be the following. The user is advised to modify the comand and the corresponding job script `gradient_job.sh`.
+
+```bash
+sbatch --array=0-1999 gradient_job.py
+```
+
+Alternatively (might be very slow, some parallelization is advised), the following command can be run:
+
+```bash
+counter=0
+while [ $counter -le 2000 ]
+do
+echo $counter
+python gradient_job.py --num_frames 5 --job_no $counter
+((counter++))
+done
+```
+
+4) Align the models and visualize the gradients:
+
+```bash
+python align_models.py --reference_system ZS-ab2 --other_systems ZS-ab3 ZS-ab4
+python visualize_gradients.py --num_frames 5 --num_splits 1 --systems SYSTEM_NAME_2 SYSTEM_NAME_3 --reference_system SYSTEM_NAME_1
+```
 ### Using CoVAMPnet for your own data
 Here we describe how to use our proposed directory structure (recommended). Alternatively, all the necessary filepaths can be edited in `config/paths.py`.
 
