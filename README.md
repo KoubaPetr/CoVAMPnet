@@ -163,4 +163,4 @@ aligned_probs_system_2 = aligned_probs_system_2[:,:,global_sorter[NUM_MARKOV_STA
 
 The visualizations of the importance of particular inter-residue distances for the classification into particular Markov States can be found in `results/feature_importance`.
 
-[Alt Text](results/examples/ZS-ab2_saliency_full.png)
+![Alt Text](results/examples/ZS-ab2_saliency_full.png)
