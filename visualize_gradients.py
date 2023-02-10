@@ -38,7 +38,7 @@ def read_file(system: str, split: int, frames_per_split: int, data: str) -> np.n
     loaded_data = np.load(file_path)
     return loaded_data
 
-def read_sorters(system: str, data: str, args:argparse.Namespace = None) -> list:
+def read_sorters(system: str, data: str, reference_system: str = None) -> list:
     """
     Function for reading the yaml files containing the sorters
     Parameters
@@ -52,8 +52,8 @@ def read_sorters(system: str, data: str, args:argparse.Namespace = None) -> list
 
     """
     assert data in ['local','system'], 'Value of data expected to be "local" or "system"'
-    sorter_path = LOCAL_SORTERS_PATH_TEMPLATE.format(d=system) if data=='local' else SYSTEM_SORTERS_PATH_TEMPLATE.format(d=system, ref_data=args.reference_system)
-    #TODO: adapt the redesign of the sorter path and organization of the dict inside (num_markov_state key, instead system)
+    sorter_path = LOCAL_SORTERS_PATH_TEMPLATE.format(d=system) if data=='local' else SYSTEM_SORTERS_PATH_TEMPLATE.format(d=system, ref_data=reference_system)
+
     with open(sorter_path, "r") as read:
         sorters = yaml.safe_load(read)
 
@@ -92,6 +92,8 @@ def main(systems: list, num_splits: int, frames_per_split: int):
     ### Read the precomputed data
     grads = defaultdict(list)
     classifications = defaultdict(list)
+    local_sorters = {}
+    global_sorters = {}
 
     for system in systems:
         for split in range(num_splits):
@@ -102,17 +104,20 @@ def main(systems: list, num_splits: int, frames_per_split: int):
         grads[system] = np.concatenate(grads[system], axis=2)
         classifications[system] = np.concatenate(classifications[system], axis=2)
 
-    ### Apply the sorters
+        ### Apply the sorters
 
-    local_sorters = read_sorters(system=system, data='local')
-    global_sorters = read_sorters(system=system, data='system', args=args)
+        local_sorters[system] = read_sorters(system=system, data='local')
+        if system != args.reference_system:
+            global_sorters[system] = read_sorters(system=system, data='system', args=args.reference_system)
+        else:
+            global_sorters[system] = {NUM_MARKOV_STATES: list(range(NUM_MARKOV_STATES))}
 
     # Compose the locals sorter (aligning the models across a single system) and the global sorters (aligning the Markov states across systems)
     composed_sorters = {system: np.empty((NUM_MODELS_PER_DATASET, NUM_MARKOV_STATES)) for system in systems}
 
     for system in systems:
         for i in range(NUM_MODELS_PER_DATASET):
-            composed_sorters[system][i] = np.array(local_sorters[NUM_MARKOV_STATES][i], dtype='int')[global_sorters[NUM_MARKOV_STATES]]
+            composed_sorters[system][i] = np.array(local_sorters[system][NUM_MARKOV_STATES][i], dtype='int')[global_sorters[system][NUM_MARKOV_STATES]]
 
     grads_sorted = {
         system: np.empty((NUM_MODELS_PER_DATASET, NUM_MARKOV_STATES, num_frames_total, NUM_INTERRESIDUE_DISTANCES)) for
