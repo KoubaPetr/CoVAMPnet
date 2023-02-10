@@ -80,7 +80,7 @@ done
 
 ```bash
 python align_models.py --reference_system ZS-ab2 --other_systems ZS-ab3 ZS-ab4
-python visualize_gradients.py --num_frames 5 --num_splits 1 --systems SYSTEM_NAME_2 SYSTEM_NAME_3 --reference_system SYSTEM_NAME_1
+python visualize_gradients.py --num_frames 5 --num_splits 2000 --systems ZS-ab2 ZS-ab3 ZS-ab4 --reference_system ZS-ab2
 ```
 ### Using CoVAMPnet for your own data
 Here we describe how to use our proposed directory structure (recommended). Alternatively, all the necessary filepaths can be edited in `config/paths.py`.
@@ -111,35 +111,66 @@ Prepare data:
 └── data/
     ├── models/
     │   ├── SYSTEM_NAME_1/
-    │   │   ├── model-ve-SYSTEM_NAME-M-MID-intermediate-2.hdf5 //Fill in name of your system, M= #markov_states , MID= model_id (i.e. 0-19 for 20 trained models for each system)
+    │   │   ├── model-ve-SYSTEM_NAME-M-MID-intermediate-2.hdf5 #Fill in name of your system, M= #markov_states , MID= model_id (i.e. 0-19 for 20 trained models for each system)
     │   │   └── ...
     │   └── SYSTEM_NAME_2/
     │       └── ...
     ├── model_loss_scores/
     │   ├── SYSTEM_NAME_1/
-    │   │   ├── model-histories-SYSTEM_NAME-M-MID.p //Fill in name of your system, M= #markov_states , MID= model_id (i.e. 0-19 for 20 trained models for each system)
+    │   │   ├── model-histories-SYSTEM_NAME-M-MID.p #Fill in name of your system, M= #markov_states , MID= model_id (i.e. 0-19 for 20 trained models for each system)
     │   │   └── ...    
     │   ├── SYSTEM_NAME_2/
     │   │   └── ...
     │   └── ...
     └── model_outputs/
         ├── SYSTEM_NAME_1/
-        │   └── data.hdf5 //TODO
+        │   └── data.hdf5 #TODO
         ├── SYSTEM_NAME_2/
         │   └── ...
         └── ...
 
 ```
 
-3) In terminal in the root directory, run the following sequence of commands (plugging in your system names, assuming the alignment should be performed w.r.t. SYSTEM_NAME_1):
+3) In terminal in the root directory, run the following command to preprocess your data (plugging in your system names, example: `SYSTEM_NAME_1=ZS-ab2`):
 ```bash
-python extract_mindist_representation.py --systems SYSTEM_NAME_1 SYSTEM_NAME_2 SYSTEM_NAME_3
-python compute_gradients.py --num_frames 5 --job_no 0 --systems SYSTEM_NAME_1 SYSTEM_NAME_2 SYSTEM_NAME_3
-python align_models.py --reference_system SYSTEM_NAME_1 --other_systems SYSTEM_NAME_2 SYSTEM_NAME_3
-python visualize_gradients.py --num_frames 5 --num_splits 1 --systems SYSTEM_NAME_2 SYSTEM_NAME_3 --reference_system SYSTEM_NAME_1
+SYSTEM_NAME_1=...
+SYSTEM_NAME_2=...
+SYSTEM_NAME_3=...
+
+python extract_mindist_representation.py --systems $SYSTEM_NAME_1 $SYSTEM_NAME_2 $SYSTEM_NAME_3
 ```
 
-TODO: iteration over the jobs
+4) Before precomputing the gradients, decide over how many MD frames the gradients should be evaluated for each system. For computational efficiency it is recommended to parallelize the gradient computation. To this end, specify 2 parameters NUM_FRAMES_PER_JOB and NUM_JOBS, where the total number of frames used for evaluation will be the product of these two parameters. Choose the balance of the two parameters, according to what can be handled by users machine memory. Optionally (recommended), the selection of frames for the gradient computation can be precomputed, to ensure each frame is drawn only at maximum once across all jobs. This precomputation can be achieved by calling the following script:
+
+```bash
+NUM_FRAMES_PER_JOB=...
+NUM_JOBS=...
+python select_frames_for_gradient_evaluation --frames_per_split $NUM_FRAMES_PER_JOB --num_splits $NUM_JOBS
+```
+
+5) Similarly to the paragraph on reproduction of paper values, the precise way of parallelization will depend on your machine. Below is an example of using SLURM, but the corresponding script needs to be adjusted to match users cluster. Alternatively
+
+```bash
+sbatch --array=0-$(($NUM_JOBS-1)) gradient_job.py
+```
+
+Alternatively (might be very slow, some parallelization is advised), the following command can be run:
+
+```bash
+counter=0
+while [ $counter -le $NUM_JOBS ]
+do
+echo $counter
+python gradient_job.py --num_frames $NUM_FRAMES_PER_JOB --job_no $counter
+((counter++))
+done
+```
+
+6) Align the models and visualize the gradients, to this end reference system with respect to which the alignment should be performed, needs to be specified:
+```bash
+python align_models.py --reference_system $SYSTEM_NAME_1 --other_systems $SYSTEM_NAME_2 $SYSTEM_NAME_3
+python visualize_gradients.py --num_frames $NUM_FRAMES_PER_JOB --num_splits $NUM_JOBS --systems $SYSTEM_NAME_1 $SYSTEM_NAME_2 $SYSTEM_NAME_3 --reference_system $SYSTEM_NAME_1
+```
 
 ## Outputs of CoVAMPnet
 
