@@ -58,7 +58,7 @@ python visualize_gradients.py --num_frames 5 --num_splits 1 --systems ZS-ab2 ZS-
 ```bash
 wget https://data.ciirc.cvut.cz/public/projects/2023CoVAMPnet/covampnet_data.tar.gz
 tar -xf covampnet_data.tar.gz
-cp -TRv covampnet_data/ data/
+cp -TRv CoVAMPnet_data/ data/
 mv covampnet_data/ data/
 ```
 
