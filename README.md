@@ -6,6 +6,16 @@ For training the VAMPnet and for performing the analyses over a single system, w
 
 For the Comparative Markov State Analysis (CoVAMPnet), we provide the code in this repository and supplementing data [on project web page (17 GB)](https://data.ciirc.cvut.cz/public/projects/2023CoVAMPnet/covampnet_data.tar.gz).
 
+## Citation
+If you use this code in your research resulting in an academic publication, please cite our work by using the following citation:
+```
+@article{covampnet2023biorxiv,
+    title={Effects of Alzheimer’s Disease Drug Candidates on Disordered Aβ42 Dissected by Comparative Markov State Analysis CoVAMPnet},
+    author={Sérgio M. Marques and Petr Kouba and Anthony Legrand and Jiri Sedlar and Lucas Disson and Joan Planas-Iglesias and Zainab Sanusi and Antonin Kunka and Jiri Damborsky and Tomas Pajdla and Zbynek Prokop and Stanislav Mazurenko and Josef Sivic and David Bednar},
+    journal={bioRxiv preprint bioRxiv:2023.01.06.523007},
+    year={2023}
+}
+```
 ## Running CoVAMPnet
 
 ### Requirements
