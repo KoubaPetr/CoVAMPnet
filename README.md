@@ -38,7 +38,7 @@ pip install tensorflow==2.11.0
 conda install h5py
 conda install yaml
 pip install typing-extensions
-pip install pot
+pip install POT
 ```
 
 ### Running the toy example
