@@ -8,7 +8,7 @@ PRECOMPUTED_TRAJECTORIES_PATH_TEMPLATE = "data/precomputed_trajectories/mindist-
 DATASPLITS_PATH_TEMPLATE = 'data/training_splits/{d}/model-idx-{d}-{{model_idx}}.hdf5'
 MODEL_OUTPUTS_PATH_TEMPLATE = 'data/model_outputs/{d}/data.hdf5'
 
-FRAMES_PER_JOBS_PATH_TEMPLATE = 'results/frames_for_gradient_jobs/{d}_grads_{nf}_job_{jid}.yml'
+FRAMES_PER_JOBS_PATH_TEMPLATE = 'data/frames_for_gradient_jobs/{d}_grads_{nf}_job_{jid}.yml'
 GRADIENTS_PER_JOBS_PATH_TEMPLATE = 'results/gradients/{d}_grads_{nf}_job_{jid}.npy'
 CLASSIFICATION_PER_JOBS_PATH_TEMPLATE = 'results/classification/{d}_classification_{nf}_job_{jid}.npy'
 CLUSTER_AVG_PATH_TEMPLATE = 'results/classification/{d}_cluster_avg_mindist_{ms}_markov_states.npy'
