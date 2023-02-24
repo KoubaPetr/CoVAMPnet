@@ -91,7 +91,7 @@ done
 
 ```bash
 python align_models.py --reference_system ZS-ab2 --other_systems ZS-ab3 ZS-ab4
-python visualize_gradients.py --num_frames 5 --num_splits 2000 --systems ZS-ab2 ZS-ab3 ZS-ab4 --reference_system ZS-ab2
+python visualize_gradients.py --frames_per_split 5 --num_splits 2000 --systems ZS-ab2 ZS-ab3 ZS-ab4 --reference_system ZS-ab2
 ```
 ### Using CoVAMPnet for your own data
 Here we describe how to use our proposed directory structure (recommended). Alternatively, all the necessary filepaths can be edited in `config/paths.py`.
