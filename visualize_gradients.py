@@ -108,7 +108,7 @@ def main(systems: list, num_splits: int, frames_per_split: int):
 
         local_sorters[system] = read_sorters(system=system, data='local')
         if system != args.reference_system:
-            global_sorters[system] = read_sorters(system=system, data='system', args=args.reference_system)
+            global_sorters[system] = read_sorters(system=system, data='system', reference_system=args.reference_system)
         else:
             global_sorters[system] = {NUM_MARKOV_STATES: list(range(NUM_MARKOV_STATES))}
 
