@@ -118,11 +118,6 @@ def main(systems: list, num_splits: int, frames_per_split: int):
 
     for system in systems:
         for i in range(NUM_MODELS_PER_DATASET):
-            #print("i in models per dateset ", i)
-            #print("shape of composed sorters [system] ", composed_sorters[system].shape)
-            #print("len of local sorters  ",len(local_sorters[system][NUM_MARKOV_STATES]))
-            #print("local sorters : ", local_sorters[system][NUM_MARKOV_STATES])
-            #print("error : ", local_sorters[system][NUM_MARKOV_STATES][i])
             composed_sorters[system][i] = np.array(local_sorters[system][NUM_MARKOV_STATES][i], dtype='int')[global_sorters[system][NUM_MARKOV_STATES]]
 
     grads_sorted = {
@@ -132,8 +127,6 @@ def main(systems: list, num_splits: int, frames_per_split: int):
                     systems}
     for system in systems:
         for i in range(NUM_MODELS_PER_DATASET):
-            print("shape of gradient array : ", grads_sorted[system].shape)
-            print(grads[system].shape)
             grads_sorted[system][i] = grads[system][i][composed_sorters[system][i].astype('int')].copy()
             class_sorted[system][i] = classifications[system][i][composed_sorters[system][i].astype('int')].copy()
 
