@@ -38,6 +38,7 @@ pip install tensorflow==2.11.0
 conda install h5py
 conda install yaml
 pip install typing-extensions
+pip install POT
 ```
 
 ### Running the toy example
@@ -58,8 +59,8 @@ python visualize_gradients.py --num_frames 5 --num_splits 1 --systems ZS-ab2 ZS-
 ```bash
 wget https://data.ciirc.cvut.cz/public/projects/2023CoVAMPnet/covampnet_data.tar.gz
 tar -xf covampnet_data.tar.gz
-cp -TRv covampnet_data/ data/
-mv covampnet_data/ data/
+cp -TRv CoVAMPnet_data/ data/
+rm -rf CoVAMPnet_data/
 ```
 
 2) Preprocess data:
@@ -90,7 +91,7 @@ done
 
 ```bash
 python align_models.py --reference_system ZS-ab2 --other_systems ZS-ab3 ZS-ab4
-python visualize_gradients.py --num_frames 5 --num_splits 2000 --systems ZS-ab2 ZS-ab3 ZS-ab4 --reference_system ZS-ab2
+python visualize_gradients.py --frames_per_split 5 --num_splits 2000 --systems ZS-ab2 ZS-ab3 ZS-ab4 --reference_system ZS-ab2
 ```
 ### Using CoVAMPnet for your own data
 Here we describe how to use our proposed directory structure (recommended). Alternatively, all the necessary filepaths can be edited in `config/paths.py`.

@@ -259,7 +259,7 @@ def produce_alignments(args: argparse.Namespace, avg_cluster_mindists: dict, num
         data = {num_markov_states: selected_sorter.tolist()}
         filename = SYSTEM_SORTERS_PATH_TEMPLATE.format(d=s1, ref_data=args.reference_system)
         update_yaml(filename=filename, new_data=data)
-        logging.info(f"System {s1} aligned w.r.t. system {args.reference_system}.")
+        logging.info(f"System {s1} aligned w.r.t. system {s2}.")
 
 
     #Verify that the system sorters already contain the local sort information - should be in visualize_gradients
