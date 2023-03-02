@@ -33,7 +33,7 @@ from src.vanilla_gradients import VanillaGradients
 import tensorflow as tf
 tf.get_logger().setLevel('INFO')
 from config.paths import INFO_PATH_TEMPLATE, MODEL_PATH_TEMPLATE, MODEL_HISTORY_PATH_TEMPLATE, PRECOMPUTED_TRAJECTORIES_PATH_TEMPLATE, DATASPLITS_PATH_TEMPLATE, FRAMES_PER_JOBS_PATH_TEMPLATE, CLASSIFICATION_PER_JOBS_PATH_TEMPLATE, GRADIENTS_PER_JOBS_PATH_TEMPLATE
-
+from config.data_model_params import MAX_FRAMES,SPLIT_RATIO,MD_TIME_RESOLUTION_IN_NS,NETWORK_LAG_IN_FRAMES,TRAININGS_PER_SPLIT, NUM_MARKOV_STATES, NUM_MODELS_PER_DATASET, NUM_TOTAL_TRAIN_ATTEMPTS
 parser = argparse.ArgumentParser()
 parser.add_argument("--num_frames", type=int, default=5, help="number of frames to evaluate the gradients on")
 parser.add_argument('--job_no', type=int, default=0, help='attempt number')
@@ -71,7 +71,8 @@ class DataParameters:
     Class reading and holding data and parameters for our analysis
     """
 
-    def __init__(self, dataset_name, max_frames=650000, ratio=0.9, dt=0.1, network_lag=50, trainings_per_split=3, num_attempts=6, num_markov_states=3):
+    def __init__(self, dataset_name, max_frames=MAX_FRAMES, ratio=SPLIT_RATIO, dt=MD_TIME_RESOLUTION_IN_NS, network_lag=NETWORK_LAG_IN_FRAMES, trainings_per_split=TRAININGS_PER_SPLIT, num_attempts=NUM_TOTAL_TRAIN_ATTEMPTS, num_markov_states=NUM_MARKOV_STATES):
+        assert (NUM_TOTAL_TRAIN_ATTEMPTS//TRAININGS_PER_SPLIT)==NUM_MODELS_PER_DATASET, "Inconsistent number of total attempts, trainings per split and number of selected models"
         self.max_frames = max_frames
         self.num_markov_states = num_markov_states
         self.dataset_name = dataset_name
@@ -220,8 +221,8 @@ def main(systems: list[str] = ['ZS-ab2', 'ZS-ab3', 'ZS-ab4']):
             grads[system] = np.load(GRADIENTS_PER_JOBS_PATH_TEMPLATE.format(d=system,nf=args.num_frames,jid=args.job_no))
             classifications[system] = np.load(CLASSIFICATION_PER_JOBS_PATH_TEMPLATE.format(d=system,nf=args.num_frames,jid=args.job_no))
         elif (not os.path.exists(GRADIENTS_PER_JOBS_PATH_TEMPLATE.format(d=system,nf=args.num_frames,jid=args.job_no))) and (not os.path.exists('{}_classification_{}_job_{}.npy'.format(system,args.num_frames,args.job_no))):
-            grads_per_system = [[[0]*args.num_frames for _ in range(3)] for _ in range(params.num_selected_models)] # np.zeros((20,3,FRAMES_PER_SYSTEM,1,780))
-            class_scores_per_system = np.zeros((params.num_selected_models,3,args.num_frames))
+            grads_per_system = [[[0]*args.num_frames for _ in range(NUM_MARKOV_STATES)] for _ in range(params.num_selected_models)] # np.zeros((20,3,FRAMES_PER_SYSTEM,1,780))
+            class_scores_per_system = np.zeros((params.num_selected_models,NUM_MARKOV_STATES,args.num_frames))
 
             for m_idx, m in enumerate(models_for_systems[system]):
                 logging.info('Model {} evaluation'.format(m_idx))

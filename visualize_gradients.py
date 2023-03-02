@@ -98,6 +98,7 @@ def main(systems: list, num_splits: int, frames_per_split: int):
     for system in systems:
         for split in range(num_splits):
             grad_part = read_file(system, split, frames_per_split, 'grads')
+
             clas_part = read_file(system, split, frames_per_split, 'classifications')
             grads[system].append(grad_part)
             classifications[system].append(clas_part)
@@ -108,7 +109,7 @@ def main(systems: list, num_splits: int, frames_per_split: int):
 
         local_sorters[system] = read_sorters(system=system, data='local')
         if system != args.reference_system:
-            global_sorters[system] = read_sorters(system=system, data='system', args=args.reference_system)
+            global_sorters[system] = read_sorters(system=system, data='system', reference_system=args.reference_system)
         else:
             global_sorters[system] = {NUM_MARKOV_STATES: list(range(NUM_MARKOV_STATES))}
 
@@ -117,6 +118,11 @@ def main(systems: list, num_splits: int, frames_per_split: int):
 
     for system in systems:
         for i in range(NUM_MODELS_PER_DATASET):
+            #print("i in models per dateset ", i)
+            #print("shape of composed sorters [system] ", composed_sorters[system].shape)
+            #print("len of local sorters  ",len(local_sorters[system][NUM_MARKOV_STATES]))
+            #print("local sorters : ", local_sorters[system][NUM_MARKOV_STATES])
+            #print("error : ", local_sorters[system][NUM_MARKOV_STATES][i])
             composed_sorters[system][i] = np.array(local_sorters[system][NUM_MARKOV_STATES][i], dtype='int')[global_sorters[system][NUM_MARKOV_STATES]]
 
     grads_sorted = {
@@ -126,8 +132,11 @@ def main(systems: list, num_splits: int, frames_per_split: int):
                     systems}
     for system in systems:
         for i in range(NUM_MODELS_PER_DATASET):
+            print("shape of gradient array : ", grads_sorted[system].shape)
+            print(grads[system].shape)
             grads_sorted[system][i] = grads[system][i][composed_sorters[system][i].astype('int')].copy()
             class_sorted[system][i] = classifications[system][i][composed_sorters[system][i].astype('int')].copy()
+
 
     ### Average over the NUM_MODELS_PER_DATASET models estimated for each system
     model_averaged_grads = {system: value.mean(0) for system, value in grads_sorted.items()}
