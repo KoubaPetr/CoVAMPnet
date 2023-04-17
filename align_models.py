@@ -225,31 +225,17 @@ def perform_local_sort(system: str, num_models: int, num_markov_states: int, avg
     update_yaml(filename=filename, new_data=data)
     return sorter
 
-def produce_alignments(args: argparse.Namespace, avg_cluster_mindists: dict, num_markov_states: int) -> None:
-    """
-    Function invoking both the local and the inter-system ('global') alignments. Alignments are saved into yaml files at
-    designated location (as specified in config.paths.py).
-
-    Parameters
-    ----------
-    args, argparse.Namespace - arguments passed by the user, mainly should contain the names of the systems at hand
-    avg_cluster_mindists, dict - key = system name, value = np.ndarray with precomputed avg cluster  features (interresidue matrices)
-    num_markov_states, int - Number of the Markov states for the underlying models
-
-    Returns
-    -------
-    """
-    assert (len(args.other_systems) > 0) and (len(args.reference_system) > 0), "At least 2 systems are required for the inter-system alignment."
-
+def align_locally(args: argparse.Namespace, avg_cluster_mindists: dict, num_markov_states: int) -> dict:
     locally_sorted_avg_clust_mindists = {}
-    for system in args.all_systems:
+    for system in args.systems:
         # First locally align all systems
         local_sorter = perform_local_sort(system=system, num_models=NUM_MODELS_PER_DATASET, num_markov_states=NUM_MARKOV_STATES, avg_cluster_mindists=avg_cluster_mindists[system])
         # Apply the local sort to the mindists
         locally_sorted_avg_clust_mindists[system] = np.array([avg_cluster_mindists[system][model_idx,:,:][local_sorter[model_idx]] for model_idx in range(local_sorter.shape[0])])
         logging.info(f"System {system} aligned locally.")
 
-    system_pairs = [(other_system, args.reference_system) for other_system in args.other_systems]
+def align_inter(args: argparse.Namespace, locally_sorted_avg_clust_mindists: dict, num_markov_states: int):
+    system_pairs = [(other_system, args.reference_system) for other_system in args.systems.remove(args.reference_system)]
 
     for s1,s2 in system_pairs:
         avg_mindist_locally_sorted = (locally_sorted_avg_clust_mindists[s1], locally_sorted_avg_clust_mindists[s2])
@@ -266,17 +252,26 @@ def produce_alignments(args: argparse.Namespace, avg_cluster_mindists: dict, num
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    # This script performs local alignment of --systems, and if the --reference_system is specified it performs
+    # inter-system alignment with respect to it.
+    parser.add_argument('--systems', nargs='+',
+                        help='List (separated by spaces) of the names of the systems for local alignment.', required=True)
     parser.add_argument('--reference_system', type=str,
                         help='Name of the system w.r.t. which the other systems should be aligned.')
-    parser.add_argument('--other_systems', nargs='+',
-                        help='List (separated by spaces) the names of the systems for which you wish to preprocess the data.',
-                        required=True)
     args = parser.parse_args()
-    args.all_systems = [args.reference_system, *args.other_systems]
 
+    inter_system_alignment = bool(args.reference_system)
+    if inter_system_alignment:
+        assert args.reference_system in args.systems # reference system must be among the list of all the systems for alignment
+        assert len(args.systems) > 1 # we need at least two systems for inter-system alignment
     avg_cluster_mindists = {}
-    for system in args.all_systems:
+
+    for system in args.systems:
         filepath = CLUSTER_AVG_PATH_TEMPLATE.format(d=system, ms=NUM_MARKOV_STATES)
         data = np.load(filepath)
         avg_cluster_mindists[system] = data
-    produce_alignments(args, avg_cluster_mindists, num_markov_states=NUM_MARKOV_STATES)
+    locally_sorted_avg_clust_mindists = align_locally(args, avg_cluster_mindists, num_markov_states=NUM_MARKOV_STATES)
+
+    if inter_system_alignment:
+        align_inter(args, locally_sorted_avg_clust_mindists, num_markov_states=NUM_MARKOV_STATES)
+
