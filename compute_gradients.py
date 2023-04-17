@@ -207,7 +207,7 @@ def main(systems: list[str] = ['ZS-ab2', 'ZS-ab3', 'ZS-ab4']):
 
 
     v=VanillaGradients()
-    CLASSES = (0,1,2)
+    CLASSES = tuple(range(NUM_MARKOV_STATES))
     grads = {}
     classifications = {}
 

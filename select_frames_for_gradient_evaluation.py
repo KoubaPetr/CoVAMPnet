@@ -17,6 +17,7 @@ data_pars = {system: DataParameters(dataset_name=system) for system in args.syst
 total_frames = args.frames_per_split*args.num_splits
 FRAME_IDs = {system: random.sample(range(0, data_pars[system].num_frames), total_frames) for system in args.systems} # Pick frames on which to evaluate for each system
 
-for job_no in trange(args.num_splits):
-    with open(FRAMES_PER_JOBS_PATH_TEMPLATE.format(args.frames_per_split,job_no), 'w') as outfile:
-        yaml.dump(FRAME_IDs[job_no*args.frames_per_split:(job_no+1)*args.frames_per_split], outfile, default_flow_style=False)
+for system in args.systems:
+    for job_no in trange(args.num_splits):
+        with open(FRAMES_PER_JOBS_PATH_TEMPLATE.format(d=system, nf=args.frames_per_split,jid=job_no), 'w') as outfile:
+            yaml.dump({system : FRAME_IDs[system][job_no*args.frames_per_split:(job_no+1)*args.frames_per_split]}, outfile, default_flow_style=False)
