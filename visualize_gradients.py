@@ -98,6 +98,7 @@ def main(systems: list, num_splits: int, frames_per_split: int):
     for system in systems:
         for split in range(num_splits):
             grad_part = read_file(system, split, frames_per_split, 'grads')
+
             clas_part = read_file(system, split, frames_per_split, 'classifications')
             grads[system].append(grad_part)
             classifications[system].append(clas_part)
@@ -108,7 +109,7 @@ def main(systems: list, num_splits: int, frames_per_split: int):
 
         local_sorters[system] = read_sorters(system=system, data='local')
         if system != args.reference_system:
-            global_sorters[system] = read_sorters(system=system, data='system', args=args.reference_system)
+            global_sorters[system] = read_sorters(system=system, data='system', reference_system=args.reference_system)
         else:
             global_sorters[system] = {NUM_MARKOV_STATES: list(range(NUM_MARKOV_STATES))}
 
@@ -128,6 +129,7 @@ def main(systems: list, num_splits: int, frames_per_split: int):
         for i in range(NUM_MODELS_PER_DATASET):
             grads_sorted[system][i] = grads[system][i][composed_sorters[system][i].astype('int')].copy()
             class_sorted[system][i] = classifications[system][i][composed_sorters[system][i].astype('int')].copy()
+
 
     ### Average over the NUM_MODELS_PER_DATASET models estimated for each system
     model_averaged_grads = {system: value.mean(0) for system, value in grads_sorted.items()}
