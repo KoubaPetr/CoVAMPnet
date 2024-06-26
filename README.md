@@ -9,11 +9,13 @@ For the Comparative Markov State Analysis (CoVAMPnet), we provide the code in th
 ## Citation
 If you use this code in your research resulting in an academic publication, please cite our work by using the following citation:
 ```
-@article{covampnet2023biorxiv,
-    title={Effects of Alzheimer’s Disease Drug Candidates on Disordered Aβ42 Dissected by Comparative Markov State Analysis CoVAMPnet},
+@article{covampnet2024jacsau,
+    title={{CoVAMPnet}: Comparative Markov State Analysis for Studying Effects of Drug Candidates on Disordered Biomolecules},
     author={Sérgio M. Marques and Petr Kouba and Anthony Legrand and Jiri Sedlar and Lucas Disson and Joan Planas-Iglesias and Zainab Sanusi and Antonin Kunka and Jiri Damborsky and Tomas Pajdla and Zbynek Prokop and Stanislav Mazurenko and Josef Sivic and David Bednar},
-    journal={bioRxiv preprint bioRxiv:2023.01.06.523007},
-    year={2023}
+    journal={{JACS Au}},
+    year={2024},
+    url={https://doi.org/10.1021/jacsau.4c00182},
+    doi={10.1021/jacsau.4c00182}
 }
 ```
 ## Running CoVAMPnet
