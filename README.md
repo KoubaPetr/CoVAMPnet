@@ -1,6 +1,6 @@
 # Comparative Markov State Analysis (CoVAMPnet)
 
-Code supplementing the paper "Effects of Alzheimer’s Disease Drug Candidates on Disordered Aβ42 Dissected by Comparative Markov State Analysis CoVAMPnet" [BioRxiv preprint](https://www.biorxiv.org/content/10.1101/2023.01.06.523007v1)
+Code supplementing the paper "CoVAMPnet: comparative Markov state analysis for studying effects of drug candidates on disordered biomolecules" [published in JACS Au](https://pubs.acs.org/doi/full/10.1021/jacsau.4c00182)
 
 For training the VAMPnet and for performing the analyses over a single system, we acknowledge and refer to the [Ab-42 Kinetic ensemble repo](https://github.com/vendruscolo-lab/ab42-kinetic-ensemble).
 
